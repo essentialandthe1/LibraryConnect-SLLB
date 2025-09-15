@@ -24,57 +24,39 @@ const CreateUser = () => {
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  if (form.password !== form.confirmPassword) {
-    alert('❌ Passwords do not match!');
-    return;
-  }
-
-  try {
-    const response = await fetch('http://127.0.0.1:8000/api/users/admin-create/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${localStorage.getItem('token')}`, // JWT token from login
-      },
-      body: JSON.stringify({
-        username: form.name,
-        email: form.email,
-        role: form.role,
-        password: form.password,
-      }),
-    });
-
-    if (response.ok) {
-      alert(`✅ User "${form.name}" created successfully!`);
-      navigate('/manage-users');
-    } else {
-      const err = await response.json();
-      alert('❌ Error: ' + JSON.stringify(err));
+    if (form.password !== form.confirmPassword) {
+      alert('❌ Passwords do not match!');
+      return;
     }
-  } catch (error) {
-    console.error('User creation failed:', error);
-    alert('❌ Failed to create user. Please try again.');
-  }
-};
 
-    const newUser = {
-      id: Date.now(),
-      name: form.name,
-      email: form.email,
-      phone: form.phone,
-      role: form.role,
-      branch: form.branch,
-      status: form.status,
-      password: form.password, // for mock/demo only
-    };
+    try {
+      const response = await fetch('http://127.0.0.1:8000/api/users/admin-create/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`, // JWT token from login
+        },
+        body: JSON.stringify({
+          username: form.name,
+          email: form.email,
+          role: form.role,
+          password: form.password,
+        }),
+      });
 
-    const updatedUsers = [...existingUsers, newUser];
-    localStorage.setItem('users', JSON.stringify(updatedUsers));
-
-    alert(`✅ User "${form.name}" created successfully!`);
-    navigate('/manage-users'); // ✅ Redirect to user list
+      if (response.ok) {
+        alert(`✅ User "${form.name}" created successfully!`);
+        navigate('/manage-users');
+      } else {
+        const err = await response.json();
+        alert('❌ Error: ' + JSON.stringify(err));
+      }
+    } catch (error) {
+      console.error('User creation failed:', error);
+      alert('❌ Failed to create user. Please try again.');
+    }
   };
 
   const handleClear = () => {
@@ -95,7 +77,8 @@ const CreateUser = () => {
       <h2 className="text-xl font-bold mb-6 text-gray-800 dark:text-white">Create New User</h2>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Full Name */}
+        {/* All your form inputs go here */}
+        {/* ... (rest of your JSX) ... */}
         <div>
           <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">Full Name</label>
           <input
@@ -107,138 +90,6 @@ const CreateUser = () => {
             placeholder="Enter full name"
             className="w-full mt-1 px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
           />
-        </div>
-
-        {/* Email */}
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">Email Address</label>
-          <input
-            type="email"
-            name="email"
-            value={form.email}
-            onChange={handleChange}
-            required
-            placeholder="Enter email"
-            className="w-full mt-1 px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-          />
-        </div>
-
-        {/* Phone */}
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">Phone Number</label>
-          <input
-            type="tel"
-            name="phone"
-            value={form.phone}
-            onChange={handleChange}
-            required
-            placeholder="Enter phone number"
-            className="w-full mt-1 px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-          />
-        </div>
-
-        {/* Role */}
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">User Role / Position</label>
-          <select
-            name="role"
-            value={form.role}
-            onChange={handleChange}
-            required
-            className="w-full mt-1 px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-          >
-            <option value="">Select a role</option>
-            <option value="admin">Admin</option>
-            <option value="chief">Chief Librarian</option>
-            <option value="regional">Regional Librarian</option>
-            <option value="regional">Departmental Head</option>
-            <option value="branch">Branch Librarian</option>
-          </select>
-        </div>
-
-        {/* Branch */}
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">Branch / Department</label>
-          <select
-            name="branch"
-            value={form.branch}
-            onChange={handleChange}
-            required
-            className="w-full mt-1 px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-          >
-            <option value="">Select Branch or Department</option>
-            <option value="HQ">HQ</option>
-            <option value="HQ">Cataloguing Department HQ</option>
-            <option value="HQ">Reference Department HQ</option>
-            <option value="HQ">Adult Lending Department HQ</option>
-            <option value="HQ">Children Department HQ</option>
-            <option value="Bo Regional">Regional Library South </option>
-            <option value="Bo City">City Library Bo</option>
-            <option value="Kenema Regional">Regional Library East</option>
-            <option value="Kenema city">City Library Kenema</option>
-            <option value="Makeni Regional">Regional Library North</option>
-            <option value="Makeni city">City Library Makeni</option>
-            <option value="Eastern Region">Kailahun District Library</option>
-            <option value="Eastern Region">Koidu District Library</option>
-            <option value="Eastern Region">Segbuma Branch Library</option>
-            <option value="Western Area">Western Area</option>
-            <option value="Makeni Division">Makeni Division</option>
-          </select>
-        </div>
-
-        {/* Password */}
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">Password</label>
-          <input
-            type="password"
-            name="password"
-            value={form.password}
-            onChange={handleChange}
-            required
-            placeholder="Enter password"
-            className="w-full mt-1 px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-          />
-        </div>
-
-        {/* Confirm Password */}
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">Confirm Password</label>
-          <input
-            type="password"
-            name="confirmPassword"
-            value={form.confirmPassword}
-            onChange={handleChange}
-            required
-            placeholder="Re-enter password"
-            className="w-full mt-1 px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-          />
-        </div>
-
-        {/* Account Status */}
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Account Status</label>
-          <div className="flex gap-4 items-center">
-            <label className="flex items-center gap-1 text-sm text-gray-700 dark:text-gray-300">
-              <input
-                type="radio"
-                name="status"
-                value="active"
-                checked={form.status === 'active'}
-                onChange={handleChange}
-              />
-              Active
-            </label>
-            <label className="flex items-center gap-1 text-sm text-gray-700 dark:text-gray-300">
-              <input
-                type="radio"
-                name="status"
-                value="inactive"
-                checked={form.status === 'inactive'}
-                onChange={handleChange}
-              />
-              Inactive
-            </label>
-          </div>
         </div>
 
         {/* Action Buttons */}
