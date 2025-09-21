@@ -1,3 +1,4 @@
+// src/components/Sidebar.jsx
 import React, { useEffect, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
@@ -53,9 +54,16 @@ const Sidebar = ({ isOpen, toggleSidebar, role }) => {
 
   const settingsLink = [{ label: 'Settings', path: '/settings', icon: <Settings size={18} /> }];
 
-  // 🔐 Build final link list by role
+  // ✅ Recognize all admin roles, not just "admin"
+  const adminRoles = [
+    'Admin/HR',
+    'Chief Librarian',
+    'Deputy Chief Librarian',
+    'Principal Librarian',
+  ];
+
   let links = [];
-  if (role === 'admin') {
+  if (adminRoles.includes(user.role)) {
     links = [
       ...dashboardLink,
       ...adminOnly,
@@ -92,7 +100,7 @@ const Sidebar = ({ isOpen, toggleSidebar, role }) => {
         className={`fixed top-0 right-0 min-h-screen w-64 bg-blue-700 text-white z-50 transform transition-transform duration-300
         ${isOpen ? 'translate-x-0' : 'translate-x-full'} md:static md:translate-x-0`}
       >
-        {/* Header with avatar */}
+        {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-blue-500">
           <h1 className="text-lg font-bold">LibraryConnect</h1>
           <button onClick={toggleSidebar} className="md:hidden text-white">

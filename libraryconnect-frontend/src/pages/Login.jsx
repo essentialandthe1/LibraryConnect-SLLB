@@ -1,54 +1,120 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Sun, Moon, Eye, EyeOff } from 'lucide-react';
-import logo from '../assets/logo.png';
-import bgImage from '../assets/login-bg.jpg'; // 📌 add your background image to assets
+// src/pages/Login.jsx
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Sun, Moon, Eye, EyeOff } from "lucide-react";
+import toast from "react-hot-toast";
+import logo from "../assets/logo.png";
+import bgImage from "../assets/login-bg.jpg"; // 📌 background image
+
+// 🔧 Toggle backend mode
+const USE_BACKEND = false; // change to true when Django is ready
+const API_URL = "http://127.0.0.1:8000/api/auth/login/";
+
+// 🧑‍🤝‍🧑 Mock users for local testing
+const mockUsers = [
+  {
+    email: "admin@sllb.sl",
+    password: "admin123",
+    role: "Admin/HR",
+  },
+  {
+    email: "chief@sllb.sl",
+    password: "chief123",
+    role: "Chief Librarian",
+  },
+  {
+    email: "user@sllb.sl",
+    password: "user123",
+    role: "User",   // ✅ Consistent with allowed roles
+  },
+];
 
 const Login = () => {
-  const [theme, setTheme] = useState('light');
+  const [theme, setTheme] = useState("light");
   const [showPassword, setShowPassword] = useState(false);
-  const [role, setRole] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [remember, setRemember] = useState(false);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  // 🌙/☀️ Toggle dark/light mode
   const toggleTheme = () => {
-    document.documentElement.classList.toggle('dark');
-    setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
+    document.documentElement.classList.toggle("dark");
+    setTheme((prev) => (prev === "light" ? "dark" : "light"));
   };
 
+  // 🔑 Handle login
   const handleLogin = async (e) => {
     e.preventDefault();
+    setLoading(true);
 
-    // 🔑 BACKEND WORK STARTS HERE
-    // Replace this with real backend login call
-    const user = { email, role };
-    localStorage.setItem('userInfo', JSON.stringify(user));
+    try {
+      let userData;
 
-    const adminRoles = [
-      'Admin/HR',
-      'Chief Librarian',
-      'Deputy Chief Librarian',
-      'Principal Librarian',
-    ];
+      if (USE_BACKEND) {
+        // 📡 Real backend login (future)
+        const res = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        });
 
-    if (adminRoles.includes(role)) {
-      navigate('/admin-dashboard');
-    } else {
-      navigate('/user-dashboard');
+        if (!res.ok) {
+          toast.error("❌ Invalid email or password");
+          setLoading(false);
+          return;
+        }
+
+        userData = await res.json();
+      } else {
+        // 🧑‍💻 Local mock login
+        const foundUser = mockUsers.find(
+          (u) => u.email === email && u.password === password
+        );
+        if (!foundUser) {
+          toast.error("❌ Invalid email or password");
+          setLoading(false);
+          return;
+        }
+        userData = foundUser; // mimic backend response
+      }
+
+      // ✅ Store session
+      const storage = remember ? localStorage : sessionStorage;
+      storage.setItem("userInfo", JSON.stringify(userData));
+
+      toast.success(`✅ Welcome, ${userData.email}`);
+
+      // 🎯 Redirect based on role
+      const adminRoles = [
+        "Admin/HR",
+        "Chief Librarian",
+        "Deputy Chief Librarian",
+        "Principal Librarian",
+      ];
+
+      if (adminRoles.includes(userData.role)) {
+        navigate("/admin-dashboard");
+      } else {
+        navigate("/user-dashboard");
+      }
+    } catch (err) {
+      console.error("Login error:", err);
+      toast.error("⚠️ Something went wrong");
+    } finally {
+      setLoading(false);
     }
-    // 🔑 BACKEND WORK ENDS HERE
   };
 
   return (
     <div className="min-h-screen flex">
-      {/* LEFT SIDE - Image with overlay */}
+      {/* LEFT SIDE - Background image */}
       <div
         className="hidden md:flex w-2/3 bg-cover bg-center relative rounded-tr-3xl"
         style={{ backgroundImage: `url(${bgImage})` }}
       >
-        {/* Overlay */}
-        <div className="absolute inset-0 bg-blue-900 bg-opacity-50 flex flex-col justify-end p-10 text-white">
+        <div className="absolute inset-0 bg-blue-900 bg-opacity-50 flex flex-col justify-end p-10 text-white rounded-tr-3xl">
           <h1 className="text-2xl font-bold mb-2">LibraryConnect</h1>
           <p className="max-w-md text-sm">
             Bridging the gap between Sierra Leone Library Board HQ and branches
@@ -57,7 +123,7 @@ const Login = () => {
         </div>
       </div>
 
-      {/* RIGHT SIDE - Form */}
+      {/* RIGHT SIDE - Login form */}
       <div className="flex flex-col justify-center items-center w-full md:w-1/2 bg-white dark:bg-gray-900 px-6 py-10">
         {/* Logo + Theme Toggle */}
         <div className="flex justify-between w-full max-w-sm items-center mb-6">
@@ -71,7 +137,7 @@ const Login = () => {
             onClick={toggleTheme}
             className="text-gray-700 dark:text-gray-200"
           >
-            {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+            {theme === "light" ? <Moon size={20} /> : <Sun size={20} />}
           </button>
         </div>
 
@@ -107,7 +173,7 @@ const Login = () => {
             </label>
             <div className="relative">
               <input
-                type={showPassword ? 'text' : 'password'}
+                type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter your password"
@@ -124,56 +190,34 @@ const Login = () => {
             </div>
           </div>
 
-          {/* Role */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
-              Role
-            </label>
-            <select
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              required
-              className="w-full mt-1 px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-            >
-              <option value="">Select Role</option>
-              {/* Admin */}
-              <option value="Admin/HR">Admin/HR</option>
-              <option value="Chief Librarian">Chief Librarian</option>
-              <option value="Deputy Chief Librarian">Deputy Chief Librarian</option>
-              <option value="Principal Librarian">Principal Librarian</option>
-              {/* Users */}
-              <option value="Regional Librarian">Regional Librarian</option>
-              <option value="District Librarian">District Librarian</option>
-              <option value="Librarian in charge">Librarian in Charge</option>
-              <option value="Procurement Officer">Procurement Officer</option>
-              <option value="Finance Team">Finance Team</option>
-              <option value="Auditor">Auditor</option>
-              <option value="Secretary">Secretary</option>
-              <option value="Departmental Head">Departmental Head</option>
-            </select>
-          </div>
-
-          {/* Remember me / Forgot password */}
+          {/* Remember me */}
           <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
             <label className="flex items-center gap-2 font-semibold">
-              <input type="checkbox" className="accent-blue-600" />
+              <input
+                type="checkbox"
+                checked={remember}
+                onChange={(e) => setRemember(e.target.checked)}
+                className="accent-blue-600"
+              />
               Remember Me
             </label>
-            <a href="#" className="hover:underline">
-              Forgot Password?
-            </a>
           </div>
 
           {/* Submit */}
           <button
             type="submit"
-            className="w-full py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            disabled={loading}
+            className={`w-full py-2 rounded-md text-white ${
+              loading
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700"
+            }`}
           >
-            Log In
+            {loading ? "Logging in..." : "Log In"}
           </button>
 
           <p className="text-center text-xs text-gray-500 dark:text-gray-400 mt-2">
-            Need an account? Contact your HQ Administrator.
+            Need help? Contact your HQ Administrator.
           </p>
         </form>
 
