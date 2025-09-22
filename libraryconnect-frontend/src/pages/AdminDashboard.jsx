@@ -43,17 +43,17 @@ const AdminDashboard = () => {
         <table className="w-full text-sm">
           <thead className="bg-blue-600 text-white">
             <tr>
-              <th className="p-2">Name</th>
-              <th className="p-2">Email</th>
-              <th className="p-2">Role</th>
+              <th className="p-2  text-start w-2/5">Name</th>
+              <th className="p-2  text-start w-2/5">Email</th>
+              <th className="p-2 text-start">Role</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody >
             {users.map((u, i) => (
               <tr key={i} className="border-b">
-                <td className="p-2">{u.name}</td>
-                <td className="p-2">{u.email}</td>
-                <td className="p-2">{u.role}</td>
+                <td className="p-2 w-2/5">{u.name}</td>
+                <td className="p-2 w-2/5">{u.email}</td>
+                <td className="p-2 ">{u.role}</td>
               </tr>
             ))}
           </tbody>
