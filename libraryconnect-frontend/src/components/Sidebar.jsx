@@ -71,7 +71,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         <nav className="p-4 space-y-2">
           {/* Dashboard */}
           <NavLink
-            to="/dashboard"
+            to={`/${adminRoles.includes(user.role) ? "admin" : "user"}-dashboard`}
             onClick={toggleSidebar}
             className={({ isActive }) =>
               `flex items-center gap-3 px-3 py-2 rounded-md hover:bg-blue-600 ${
