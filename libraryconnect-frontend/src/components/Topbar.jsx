@@ -12,20 +12,28 @@ const Topbar = ({ toggleSidebar }) => {
   const notificationsRef = useRef(null);
   const profileRef = useRef(null);
 
+  // 📨 Mock notifications (replace with backend API later)
   const notifications = [
     { id: 1, message: "New document from HQ" },
     { id: 2, message: "Finance report uploaded" },
     { id: 3, message: "Bo Region submitted memo" },
   ];
 
-  // Get logged in user
-  const user = JSON.parse(localStorage.getItem("userInfo")) || {
-    email: "guest@sllb.sl",
-    role: "Guest",
-  };
+  // 👤 Get logged in user (local/sessionStorage only)
+  // 🔧 When backend is ready → fetch this from Django API
+  const user =
+    JSON.parse(localStorage.getItem("userInfo")) ||
+    JSON.parse(sessionStorage.getItem("userInfo")) || {
+      email: "guest@sllb.sl",
+      role: "Guest",
+    };
 
+  // 🚪 Handle logout
+  // Currently clears browser storage only
+  // 🔧 When backend is ready → also call logout API endpoint
   const handleLogout = () => {
     localStorage.removeItem("userInfo");
+    sessionStorage.removeItem("userInfo");
     navigate("/");
   };
 
@@ -59,7 +67,7 @@ const Topbar = ({ toggleSidebar }) => {
 
       {/* Right side */}
       <div className="relative flex items-center gap-6 pr-2">
-        {/* 🔔 Notifications */}
+        {/* 🔔 Notifications (mock) */}
         <div className="relative hidden md:block" ref={notificationsRef}>
           <button
             onClick={() => setShowNotifications(!showNotifications)}
@@ -71,11 +79,7 @@ const Topbar = ({ toggleSidebar }) => {
             </span>
           </button>
           {showNotifications && (
-            <div
-              className="absolute right-0 mt-2 w-60 bg-white dark:bg-gray-700 rounded-md shadow-lg z-50 p-2 text-sm 
-                         transition-all duration-200 ease-out transform origin-top
-                         opacity-100 scale-100"
-            >
+            <div className="absolute right-0 mt-2 w-60 bg-white dark:bg-gray-700 rounded-md shadow-lg z-50 p-2 text-sm transition-all duration-200 ease-out transform origin-top">
               {notifications.map((note) => (
                 <div
                   key={note.id}
@@ -84,9 +88,7 @@ const Topbar = ({ toggleSidebar }) => {
                   {note.message}
                 </div>
               ))}
-              <div className="mt-2 text-center text-xs text-gray-400">
-                View All
-              </div>
+              <div className="mt-2 text-center text-xs text-gray-400">View All</div>
             </div>
           )}
         </div>
@@ -95,18 +97,13 @@ const Topbar = ({ toggleSidebar }) => {
         <div className="relative hidden md:block" ref={profileRef}>
           <button
             onClick={() => setShowProfileMenu(!showProfileMenu)}
-            className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 
-                       text-gray-700 dark:text-gray-300 hover:ring-2 hover:ring-blue-500"
+            className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:ring-2 hover:ring-blue-500"
           >
             {user.email ? user.email.charAt(0).toUpperCase() : "U"}
           </button>
 
           {showProfileMenu && (
-            <div
-              className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-700 rounded-md shadow-lg z-50 p-2 text-sm
-                         transition-all duration-200 ease-out transform origin-top
-                         opacity-100 scale-100"
-            >
+            <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-700 rounded-md shadow-lg z-50 p-2 text-sm transition-all duration-200 ease-out transform origin-top">
               <div className="px-2 py-2 border-b dark:border-gray-600">
                 <p className="font-medium">{user.email}</p>
                 <p className="text-xs text-gray-500 capitalize">{user.role}</p>
@@ -114,16 +111,14 @@ const Topbar = ({ toggleSidebar }) => {
 
               <button
                 onClick={() => navigate("/settings")}
-                className="w-full flex items-center gap-2 px-2 py-2 text-gray-700 dark:text-gray-300 
-                           hover:bg-gray-100 dark:hover:bg-gray-600 rounded"
+                className="w-full flex items-center gap-2 px-2 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 rounded"
               >
                 <Settings size={16} /> Settings
               </button>
 
               <button
                 onClick={handleLogout}
-                className="w-full flex items-center gap-2 px-2 py-2 text-red-600 
-                           hover:bg-red-100 dark:hover:bg-gray-600 rounded"
+                className="w-full flex items-center gap-2 px-2 py-2 text-red-600 hover:bg-red-100 dark:hover:bg-gray-600 rounded"
               >
                 <LogOut size={16} /> Logout
               </button>

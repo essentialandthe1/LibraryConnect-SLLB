@@ -3,16 +3,21 @@ import React, { useEffect, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
   Home, Inbox, Upload, Folder, Bell, Settings, LogOut,
-  FileText, X, Users, UserPlus, Trash2, ChevronDown, ChevronRight
+  Users, UserPlus, Trash2, ChevronDown, ChevronRight
 } from "lucide-react";
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
   const navigate = useNavigate();
   const [unreadCount, setUnreadCount] = useState(0);
-  const [userMgmtOpen, setUserMgmtOpen] = useState(false); // 👈 collapse toggle
-  const user = JSON.parse(localStorage.getItem("userInfo")) || { email: "", role: "" };
+  const [userMgmtOpen, setUserMgmtOpen] = useState(false);
 
-  // 🛎 Auto-refresh unread count every 2 seconds
+  // 👤 Get logged in user (mock/local only)
+  const user =
+    JSON.parse(localStorage.getItem("userInfo")) ||
+    JSON.parse(sessionStorage.getItem("userInfo")) || { email: "", role: "" };
+
+  // 🛎 Mock notifications (refresh count every 2s)
+  // 🔧 Replace with backend WebSocket/API later
   useEffect(() => {
     const checkUnread = () => {
       const notifs = JSON.parse(localStorage.getItem("notifications")) || [];
@@ -24,15 +29,13 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     return () => clearInterval(interval);
   }, []);
 
-  const adminRoles = [
-    "Admin/HR",
-    "Chief Librarian",
-    "Deputy Chief Librarian",
-    "Principal Librarian",
-  ];
+  // ✅ Admin roles
+  const adminRoles = ["Admin/HR", "Chief Librarian", "Deputy Chief Librarian", "Principal Librarian"];
 
+  // 🚪 Logout
   const handleLogout = () => {
     localStorage.removeItem("userInfo");
+    sessionStorage.removeItem("userInfo");
     navigate("/");
   };
 
@@ -46,7 +49,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         />
       )}
 
-      {/* Sidebar container */}
+      {/* Sidebar */}
       <div
         className={`fixed top-0 right-0 min-h-screen w-64 bg-blue-700 text-white z-50 transform transition-transform duration-300
         ${isOpen ? "translate-x-0" : "translate-x-full"} md:static md:translate-x-0`}
@@ -54,9 +57,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-blue-500">
           <h1 className="text-lg font-bold">LibraryConnect</h1>
-          <button onClick={toggleSidebar} className="md:hidden text-white">
-            <X size={22} />
-          </button>
+          <button onClick={toggleSidebar} className="md:hidden text-white">✕</button>
         </div>
 
         {/* User info */}
@@ -74,15 +75,13 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             to={`/${adminRoles.includes(user.role) ? "admin" : "user"}-dashboard`}
             onClick={toggleSidebar}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2 rounded-md hover:bg-blue-600 ${
-                isActive ? "bg-blue-600" : ""
-              }`
+              `flex items-center gap-3 px-3 py-2 rounded-md hover:bg-blue-600 ${isActive ? "bg-blue-600" : ""}`
             }
           >
             <Home size={18} /> Dashboard
           </NavLink>
 
-          {/* Collapsible: User Management (only for admins) */}
+          {/* Collapsible: User Management (Admins only) */}
           {adminRoles.includes(user.role) && (
             <div>
               <button
@@ -90,34 +89,17 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                 className="w-full flex items-center justify-between px-3 py-2 rounded-md hover:bg-blue-600"
               >
                 <span className="flex items-center gap-3">
-                  <Users size={18} />
-                  User Management
+                  <Users size={18} /> User Management
                 </span>
                 {userMgmtOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
               </button>
 
               {userMgmtOpen && (
                 <div className="ml-8 mt-1 space-y-1">
-                  <NavLink
-                    to="/create-user"
-                    onClick={toggleSidebar}
-                    className={({ isActive }) =>
-                      `flex items-center gap-2 px-2 py-1 rounded-md hover:bg-blue-600 ${
-                        isActive ? "bg-blue-600" : ""
-                      }`
-                    }
-                  >
+                  <NavLink to="/create-user" onClick={toggleSidebar} className="flex items-center gap-2 px-2 py-1 hover:bg-blue-600 rounded">
                     <UserPlus size={16} /> Create User
                   </NavLink>
-                  <NavLink
-                    to="/manage-users"
-                    onClick={toggleSidebar}
-                    className={({ isActive }) =>
-                      `flex items-center gap-2 px-2 py-1 rounded-md hover:bg-blue-600 ${
-                        isActive ? "bg-blue-600" : ""
-                      }`
-                    }
-                  >
+                  <NavLink to="/manage-users" onClick={toggleSidebar} className="flex items-center gap-2 px-2 py-1 hover:bg-blue-600 rounded">
                     <Users size={16} /> Manage Users
                   </NavLink>
                 </div>
@@ -125,55 +107,17 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             </div>
           )}
 
-          {/* Upload */}
-          <NavLink
-            to="/upload"
-            onClick={toggleSidebar}
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2 rounded-md hover:bg-blue-600 ${
-                isActive ? "bg-blue-600" : ""
-              }`
-            }
-          >
+          {/* Upload, Inbox, Folders, Notifications */}
+          <NavLink to="/upload" onClick={toggleSidebar} className="flex items-center gap-3 px-3 py-2 hover:bg-blue-600 rounded">
             <Upload size={18} /> Upload Document
           </NavLink>
-
-          {/* Inbox */}
-          <NavLink
-            to="/inbox"
-            onClick={toggleSidebar}
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2 rounded-md hover:bg-blue-600 ${
-                isActive ? "bg-blue-600" : ""
-              }`
-            }
-          >
+          <NavLink to="/inbox" onClick={toggleSidebar} className="flex items-center gap-3 px-3 py-2 hover:bg-blue-600 rounded">
             <Inbox size={18} /> Inbox
           </NavLink>
-
-          {/* Folders */}
-          <NavLink
-            to="/folders"
-            onClick={toggleSidebar}
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2 rounded-md hover:bg-blue-600 ${
-                isActive ? "bg-blue-600" : ""
-              }`
-            }
-          >
+          <NavLink to="/folders" onClick={toggleSidebar} className="flex items-center gap-3 px-3 py-2 hover:bg-blue-600 rounded">
             <Folder size={18} /> Folders
           </NavLink>
-
-          {/* Notifications */}
-          <NavLink
-            to="/notifications"
-            onClick={toggleSidebar}
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2 rounded-md hover:bg-blue-600 ${
-                isActive ? "bg-blue-600" : ""
-              }`
-            }
-          >
+          <NavLink to="/notifications" onClick={toggleSidebar} className="flex items-center gap-3 px-3 py-2 hover:bg-blue-600 rounded">
             <Bell size={18} />
             <span className="flex items-center gap-2">
               Notifications
@@ -185,30 +129,12 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             </span>
           </NavLink>
 
-          {/* Settings */}
-          <NavLink
-            to="/settings"
-            onClick={toggleSidebar}
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2 rounded-md hover:bg-blue-600 ${
-                isActive ? "bg-blue-600" : ""
-              }`
-            }
-          >
+          {/* Settings + Trash (Admins only) */}
+          <NavLink to="/settings" onClick={toggleSidebar} className="flex items-center gap-3 px-3 py-2 hover:bg-blue-600 rounded">
             <Settings size={18} /> Settings
           </NavLink>
-
-          {/* Trash (only for admins) */}
           {adminRoles.includes(user.role) && (
-            <NavLink
-              to="/trash"
-              onClick={toggleSidebar}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2 rounded-md hover:bg-blue-600 ${
-                  isActive ? "bg-blue-600" : ""
-                }`
-              }
-            >
+            <NavLink to="/trash" onClick={toggleSidebar} className="flex items-center gap-3 px-3 py-2 hover:bg-blue-600 rounded">
               <Trash2 size={18} /> Trash
             </NavLink>
           )}
@@ -216,7 +142,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           {/* Logout */}
           <button
             onClick={handleLogout}
-            className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-red-600 mt-8 text-sm text-white"
+            className="flex items-center gap-3 px-3 py-2 hover:bg-red-600 mt-8 text-sm text-white rounded"
           >
             <LogOut size={18} /> Logout
           </button>

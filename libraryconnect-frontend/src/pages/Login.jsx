@@ -7,10 +7,12 @@ import logo from "../assets/logo.png";
 import bgImage from "../assets/login-bg.jpg"; // 📌 background image
 
 // 🔧 Toggle backend mode
-const USE_BACKEND = false; // change to true when Django is ready
-const API_URL = "http://127.0.0.1:8000/api/auth/login/";
+// false = use mock users (local only)
+// true = connect to Django backend
+const USE_BACKEND = false; 
+const API_URL = "http://127.0.0.1:8000/api/auth/login/"; // 🔧 backend login endpoint
 
-// 🧑‍🤝‍🧑 Mock users for local testing
+// 🧑‍🤝‍🧑 Mock users for local testing (no backend yet)
 const mockUsers = [
   {
     email: "admin@sllb.sl",
@@ -25,17 +27,21 @@ const mockUsers = [
   {
     email: "user@sllb.sl",
     password: "user123",
-    role: "User",   // ✅ Consistent with allowed roles
+    role: "User",   // ✅ must match allowed roles
   },
 ];
 
 const Login = () => {
+  // 🎨 Theme + UI states
   const [theme, setTheme] = useState("light");
   const [showPassword, setShowPassword] = useState(false);
+
+  // 📝 Form states
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [remember, setRemember] = useState(false);
+  const [remember, setRemember] = useState(false); // ✅ "Remember Me" toggle
   const [loading, setLoading] = useState(false);
+
   const navigate = useNavigate();
 
   // 🌙/☀️ Toggle dark/light mode
@@ -66,9 +72,9 @@ const Login = () => {
           return;
         }
 
-        userData = await res.json();
+        userData = await res.json(); // 🟢 expects { email, role, token }
       } else {
-        // 🧑‍💻 Local mock login
+        // 🧑‍💻 Local mock login (works now without backend)
         const foundUser = mockUsers.find(
           (u) => u.email === email && u.password === password
         );
@@ -81,6 +87,8 @@ const Login = () => {
       }
 
       // ✅ Store session
+      // If "Remember Me" checked → use localStorage (persists after browser close)
+      // Else → use sessionStorage (clears after browser close)
       const storage = remember ? localStorage : sessionStorage;
       storage.setItem("userInfo", JSON.stringify(userData));
 
