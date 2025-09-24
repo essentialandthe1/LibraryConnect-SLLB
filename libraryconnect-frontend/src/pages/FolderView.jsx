@@ -1,54 +1,120 @@
-import React, { useEffect, useState } from 'react';
-import { FileText, FolderPlus } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+// src/pages/FolderView.jsx
+import React, { useEffect, useState } from "react";
+import { Folder as FolderIcon, FolderPlus } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const FolderView = () => {
-  const user = JSON.parse(localStorage.getItem('userInfo'));
+  const user =
+    JSON.parse(localStorage.getItem("userInfo")) || {
+      role: "",
+      email: "",
+      id: "",
+    };
   const [folders, setFolders] = useState([]);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch('/api/folders/')
-      .then(res => res.json())
-      .then(data => {
-        const filtered = user.role === 'Admin'
-          ? data
-          : data.filter(f => f.allowed_roles.includes(user.id));
-        setFolders(filtered);
-      });
+    const stored = JSON.parse(localStorage.getItem("folders")) || [];
+
+    if (stored.length === 0) {
+      const defaultFolders = [
+        {
+          id: 1,
+          name: "HQ Management",
+          description: "Headquarters documents",
+          ownerId: "admin",
+          allowedUsers: ["Admin/HR"],
+        },
+        {
+          id: 2,
+          name: "Regional Kenema",
+          description: "Kenema regional office",
+          ownerId: "chief",
+          allowedUsers: ["Chief Librarian"],
+        },
+        {
+          id: 3,
+          name: "Adult Lending HQ",
+          description: "Adult lending section",
+          ownerId: "user123",
+          allowedUsers: ["user123"],
+        },
+      ];
+      localStorage.setItem("folders", JSON.stringify(defaultFolders));
+      setFolders(defaultFolders);
+    } else {
+      const filtered =
+        user.role === "Admin" || user.role === "Admin/HR"
+          ? stored
+          : stored.filter(
+              (f) =>
+                f.ownerId === user.id ||
+                f.allowedUsers.includes(user.role) ||
+                f.allowedUsers.includes(user.email)
+            );
+      setFolders(filtered);
+    }
   }, [user]);
 
+  // Count docs inside each folder
+  const getFileCount = (folderName) => {
+    const allDocs =
+      JSON.parse(localStorage.getItem("uploadedDocuments")) || [];
+    return allDocs.filter((doc) => doc.folder === folderName).length;
+  };
+
   return (
-    <div className="p-6 max-w-5xl mx-auto">
-      <div className="flex justify-between mb-4">
+    <div className="p-6 max-w-7xl mx-auto">
+      <div className="flex justify-between mb-6">
         <h2 className="text-2xl font-bold">Folders</h2>
-        {user.role === 'Admin' && (
+        {user.role === "Admin" && (
           <button
-            onClick={() => navigate('/create-folder')}
-            className="flex items-center gap-1 bg-blue-600 text-white px-3 py-2 rounded"
+            onClick={() => navigate("/create-folder")}
+            className="flex items-center gap-1 bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700"
           >
             <FolderPlus size={16} /> Add Folder
           </button>
         )}
       </div>
 
-      <input
-        type="text"
-        className="w-full mb-4 p-2 border rounded"
-        placeholder="Search folders..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-      />
+      {/* Search */}
+      <div className="mb-6">
+        <input
+          type="text"
+          className="w-full p-2 border rounded"
+          placeholder="Search folders..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+      </div>
 
-      {folders
-        .filter(f => f.name.toLowerCase().includes(search.toLowerCase()))
-        .map(folder => (
-          <div key={folder.id} className="p-4 bg-white rounded shadow mb-4">
-            <h3 className="text-lg font-semibold text-blue-600">📁 {folder.name}</h3>
-            <p className="text-sm text-gray-500">{folder.description}</p>
-          </div>
-        ))}
+      {/* Folder Grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+        {folders
+          .filter((f) => f.name.toLowerCase().includes(search.toLowerCase()))
+          .map((folder) => (
+            <div
+              key={folder.id}
+              onClick={() =>
+                navigate("/folder-documents", { state: { folder: folder.name } })
+              }
+              className="bg-white border rounded-lg shadow-sm hover:shadow-md cursor-pointer p-4 flex flex-col items-center text-center transition"
+            >
+              <FolderIcon
+                size={48}
+                className="text-yellow-500 mb-2"
+                fill="currentColor"
+              />
+              <h3 className="text-sm font-semibold text-gray-700">
+                {folder.name}
+              </h3>
+              <p className="text-xs text-gray-500">
+                {getFileCount(folder.name)} files
+              </p>
+            </div>
+          ))}
+      </div>
     </div>
   );
 };

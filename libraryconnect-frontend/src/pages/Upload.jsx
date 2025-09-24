@@ -1,20 +1,36 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+// src/pages/Upload.jsx
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
 
 const Upload = () => {
   const navigate = useNavigate();
+  const location = useLocation(); // 👈 get navigation state
   const currentUser = JSON.parse(localStorage.getItem('userInfo')) || { role: '' };
 
+  const [folders, setFolders] = useState([]);
   const [form, setForm] = useState({
     title: '',
     type: '',
     folder: '',
     recipient: '',
-    docStatus: 'Pending',
     message: '',
     file: null,
   });
+
+  // 🔹 Load folders for dropdown
+  useEffect(() => {
+    const storedFolders = JSON.parse(localStorage.getItem('folders')) || [];
+    setFolders(storedFolders);
+
+    // 👇 If coming from FolderView, preselect folder
+    if (location.state?.folder) {
+      setForm((prev) => ({
+        ...prev,
+        folder: location.state.folder,
+      }));
+    }
+  }, [location.state]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -38,6 +54,10 @@ const Upload = () => {
       alert('❌ Please select a file to upload.');
       return;
     }
+    if (!form.folder) {
+      alert('❌ Please select a folder.');
+      return;
+    }
 
     const fileUrl = URL.createObjectURL(form.file);
 
@@ -46,36 +66,32 @@ const Upload = () => {
       file: form.title || form.file.name,
       fileUrl,
       type: form.type,
-      folder: form.folder,
+      folder: form.folder, // ✅ saved into chosen/preselected folder
       recipient: form.recipient,
-      docStatus: form.docStatus,
       message: form.message,
       by: currentUser.role,
       date: new Date().toLocaleDateString(),
-      status: 'active', // for future trash/archive
+      status: 'active',
     };
 
     const uploadedDocuments = JSON.parse(localStorage.getItem('uploadedDocuments')) || [];
     uploadedDocuments.push(newDoc);
     localStorage.setItem('uploadedDocuments', JSON.stringify(uploadedDocuments));
 
-    alert('✅ Document uploaded successfully!');
-    navigate('/inbox');
+    alert(`✅ Document uploaded to "${form.folder}"!`);
+    navigate('/folders');
 
-    // Create new notification
+    // 🔔 Create notification
     const newNotification = {
-  title: `New document uploaded: ${newDoc.file}`,
-  sender: currentUser.role,
-  timestamp: new Date().toISOString(),
-  unread: true,
-};
+      title: `New document uploaded: ${newDoc.file}`,
+      sender: currentUser.role,
+      timestamp: new Date().toISOString(),
+      unread: true,
+    };
 
-// Add to existing notifications
-const notifications = JSON.parse(localStorage.getItem('notifications')) || [];
-notifications.unshift(newNotification); // Add to top
-localStorage.setItem('notifications', JSON.stringify(notifications));
-
-
+    const notifications = JSON.parse(localStorage.getItem('notifications')) || [];
+    notifications.unshift(newNotification);
+    localStorage.setItem('notifications', JSON.stringify(notifications));
   };
 
   const handleCancel = () => {
@@ -84,7 +100,6 @@ localStorage.setItem('notifications', JSON.stringify(notifications));
       type: '',
       folder: '',
       recipient: '',
-      docStatus: 'Pending',
       message: '',
       file: null,
     });
@@ -92,11 +107,15 @@ localStorage.setItem('notifications', JSON.stringify(notifications));
 
   return (
     <div className="max-w-2xl mx-auto bg-white dark:bg-gray-800 p-6 rounded-md shadow">
-      <h2 className="text-xl font-bold mb-6 text-gray-800 dark:text-white">Send a New Document</h2>
+      <h2 className="text-xl font-bold mb-6 text-gray-800 dark:text-white">
+        Send a New Document
+      </h2>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">Document Title</label>
+          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+            Document Title
+          </label>
           <input
             type="text"
             name="title"
@@ -104,12 +123,13 @@ localStorage.setItem('notifications', JSON.stringify(notifications));
             value={form.title}
             onChange={handleChange}
             className="w-full px-3 py-2 border rounded dark:bg-gray-700 dark:text-white"
-            required
           />
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">Type</label>
+          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+            Type
+          </label>
           <input
             type="text"
             name="type"
@@ -121,20 +141,31 @@ localStorage.setItem('notifications', JSON.stringify(notifications));
           />
         </div>
 
+        {/* ✅ Folder dropdown with preselected value */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">Folder / Category</label>
-          <input
-            type="text"
+          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+            Select Folder
+          </label>
+          <select
             name="folder"
             value={form.folder}
             onChange={handleChange}
-            placeholder="e.g. Finance, Reports"
+            required
             className="w-full px-3 py-2 border rounded dark:bg-gray-700 dark:text-white"
-          />
+          >
+            <option value="">Choose folder</option>
+            {folders.map((f) => (
+              <option key={f.id} value={f.name}>
+                {f.name}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">Recipient</label>
+          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+            Recipient
+          </label>
           <select
             name="recipient"
             value={form.recipient}
@@ -151,21 +182,9 @@ localStorage.setItem('notifications', JSON.stringify(notifications));
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">Document Status</label>
-          <select
-            name="docStatus"
-            value={form.docStatus}
-            onChange={handleChange}
-            className="w-full px-3 py-2 border rounded dark:bg-gray-700 dark:text-white"
-          >
-            <option value="Pending">Pending</option>
-            <option value="Approved">Approved</option>
-            <option value="Rejected">Rejected</option>
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">Upload File</label>
+          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+            Upload File
+          </label>
           <input
             type="file"
             onChange={handleFileChange}
@@ -175,7 +194,9 @@ localStorage.setItem('notifications', JSON.stringify(notifications));
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">Message</label>
+          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+            Message
+          </label>
           <textarea
             name="message"
             placeholder="Optional message..."

@@ -1,4 +1,3 @@
-// src/App.jsx
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
 import RoleBasedLayout from "./layouts/RoleBasedLayout";
@@ -13,6 +12,7 @@ import ViewDocument from "./pages/ViewDocument";
 import FolderView from "./pages/FolderView";
 import Trash from "./pages/Trash";
 import Notifications from "./pages/Notifications";
+import FolderDocuments from "./pages/FolderDocuments"; // ✅ NEW IMPORT
 
 // Dashboards
 import AdminDashboard from "./pages/AdminDashboard";
@@ -30,7 +30,7 @@ const App = () => {
 
         {/* Protected routes inside layout */}
         <Route path="/*" element={<RoleBasedLayout />}>
-          {/* 🔐 Admin dashboard - only admins */}
+          {/* 🔐 Admin dashboard */}
           <Route
             path="admin-dashboard"
             element={
@@ -47,7 +47,7 @@ const App = () => {
             }
           />
 
-          {/* 🔐 Regular user dashboard - only basic users */}
+          {/* 🔐 User dashboard */}
           <Route
             path="user-dashboard"
             element={
@@ -57,7 +57,7 @@ const App = () => {
             }
           />
 
-          {/* Shared routes (both roles can access) */}
+          {/* Shared routes */}
           <Route path="dashboard" element={<DashboardRouter />} />
           <Route path="upload" element={<Upload />} />
           <Route path="inbox" element={<Inbox />} />
@@ -71,6 +71,7 @@ const App = () => {
           {/* Documents + folders */}
           <Route path="view-document/:id" element={<ViewDocument />} />
           <Route path="folders" element={<FolderView />} />
+          <Route path="folder-documents" element={<FolderDocuments />} /> {/* ✅ NEW ROUTE */}
           <Route path="trash" element={<Trash />} />
           <Route path="notifications" element={<Notifications />} />
         </Route>
