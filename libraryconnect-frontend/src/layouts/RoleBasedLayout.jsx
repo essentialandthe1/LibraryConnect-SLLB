@@ -6,12 +6,17 @@ import AdminDashboard from "../pages/AdminDashboard";
 import UserDashboard from "../pages/UserDashboard";
 
 const RoleBasedLayout = () => {
-  const user = JSON.parse(localStorage.getItem("userInfo"));
+  // 👤 Get current user (local/sessionStorage)
+  const user =
+    JSON.parse(localStorage.getItem("userInfo")) ||
+    JSON.parse(sessionStorage.getItem("userInfo"));
+
   const location = useLocation();
 
-  if (!user) return <Navigate to="/" />;
+  // 🚪 Redirect to login if no user
+  if (!user) return <Navigate to="/" replace />;
 
-  // ✅ Use same admin roles definition as Login.jsx
+  // ✅ Admin roles
   const adminRoles = [
     "Admin/HR",
     "Chief Librarian",
@@ -21,12 +26,13 @@ const RoleBasedLayout = () => {
 
   const isAdmin = adminRoles.includes(user.role);
 
+  // 🎯 Pick layout + dashboard
   const Layout = isAdmin ? AdminLayout : UserLayout;
   const Dashboard = isAdmin ? <AdminDashboard /> : <UserDashboard />;
 
   return (
     <Layout>
-      {/* If route is /dashboard, show the right dashboard */}
+      {/* If path is /dashboard → load correct dashboard */}
       {location.pathname === "/dashboard" ? Dashboard : <Outlet />}
     </Layout>
   );

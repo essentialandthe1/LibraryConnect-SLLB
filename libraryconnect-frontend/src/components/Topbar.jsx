@@ -1,10 +1,9 @@
-// src/components/Topbar.jsx
 import React, { useState, useRef, useEffect } from "react";
-import { Bell, LogOut, Settings } from "lucide-react";
+import { Bell, LogOut, Settings, ChevronsLeft, ChevronsRight } from "lucide-react";
 import logo from "../assets/logo.png";
 import { useNavigate } from "react-router-dom";
 
-const Topbar = ({ toggleSidebar }) => {
+const Topbar = ({ toggleSidebar, collapsed, setCollapsed }) => {
   const navigate = useNavigate();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -19,8 +18,7 @@ const Topbar = ({ toggleSidebar }) => {
     { id: 3, message: "Bo Region submitted memo" },
   ];
 
-  // 👤 Get logged in user (local/sessionStorage only)
-  // 🔧 When backend is ready → fetch this from Django API
+  // 👤 Get logged in user
   const user =
     JSON.parse(localStorage.getItem("userInfo")) ||
     JSON.parse(sessionStorage.getItem("userInfo")) || {
@@ -28,9 +26,7 @@ const Topbar = ({ toggleSidebar }) => {
       role: "Guest",
     };
 
-  // 🚪 Handle logout
-  // Currently clears browser storage only
-  // 🔧 When backend is ready → also call logout API endpoint
+  // 🚪 Logout
   const handleLogout = () => {
     localStorage.removeItem("userInfo");
     sessionStorage.removeItem("userInfo");
@@ -40,10 +36,7 @@ const Topbar = ({ toggleSidebar }) => {
   // 👇 Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (
-        notificationsRef.current &&
-        !notificationsRef.current.contains(event.target)
-      ) {
+      if (notificationsRef.current && !notificationsRef.current.contains(event.target)) {
         setShowNotifications(false);
       }
       if (profileRef.current && !profileRef.current.contains(event.target)) {
@@ -57,8 +50,17 @@ const Topbar = ({ toggleSidebar }) => {
 
   return (
     <div className="bg-white dark:bg-gray-800 px-4 py-3 shadow-sm flex justify-between items-center sticky top-0 z-50">
-      {/* Logo */}
-      <div className="flex items-center gap-2">
+      {/* Left side: collapse toggle + logo */}
+      <div className="flex items-center gap-3">
+        {/* Collapse toggle for desktop */}
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className="hidden md:block text-gray-600 dark:text-gray-300 hover:text-blue-600"
+        >
+          {collapsed ? <ChevronsRight size={20} /> : <ChevronsLeft size={20} />}
+        </button>
+
+        {/* Logo */}
         <img src={logo} alt="SLLB Logo" className="w-6 h-6 md:w-8 md:h-8" />
         <span className="font-bold text-blue-600 dark:text-blue-300 text-base md:text-lg">
           SLLB
@@ -67,7 +69,7 @@ const Topbar = ({ toggleSidebar }) => {
 
       {/* Right side */}
       <div className="relative flex items-center gap-6 pr-2">
-        {/* 🔔 Notifications (mock) */}
+        {/* 🔔 Notifications */}
         <div className="relative hidden md:block" ref={notificationsRef}>
           <button
             onClick={() => setShowNotifications(!showNotifications)}
@@ -79,7 +81,7 @@ const Topbar = ({ toggleSidebar }) => {
             </span>
           </button>
           {showNotifications && (
-            <div className="absolute right-0 mt-2 w-60 bg-white dark:bg-gray-700 rounded-md shadow-lg z-50 p-2 text-sm transition-all duration-200 ease-out transform origin-top">
+            <div className="absolute right-0 mt-2 w-60 bg-white dark:bg-gray-700 rounded-md shadow-lg z-50 p-2 text-sm">
               {notifications.map((note) => (
                 <div
                   key={note.id}
@@ -93,7 +95,7 @@ const Topbar = ({ toggleSidebar }) => {
           )}
         </div>
 
-        {/* 👤 Profile dropdown */}
+        {/* 👤 Profile */}
         <div className="relative hidden md:block" ref={profileRef}>
           <button
             onClick={() => setShowProfileMenu(!showProfileMenu)}
@@ -103,7 +105,7 @@ const Topbar = ({ toggleSidebar }) => {
           </button>
 
           {showProfileMenu && (
-            <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-700 rounded-md shadow-lg z-50 p-2 text-sm transition-all duration-200 ease-out transform origin-top">
+            <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-700 rounded-md shadow-lg z-50 p-2 text-sm">
               <div className="px-2 py-2 border-b dark:border-gray-600">
                 <p className="font-medium">{user.email}</p>
                 <p className="text-xs text-gray-500 capitalize">{user.role}</p>

@@ -5,8 +5,6 @@ import {
   FileText,
   FolderPlus,
   Plus,
-  ArrowUpCircle,
-  ArrowDownCircle,
   CheckCircle,
   XCircle,
   Download,
@@ -14,65 +12,89 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
-  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
 } from "recharts";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
+
+  // =============================
+  // 📌 State variables
+  // =============================
   const [users, setUsers] = useState([]);
   const [folders, setFolders] = useState([]);
   const [approvals, setApprovals] = useState([]);
   const [auditLogs, setAuditLogs] = useState([]);
   const [documents, setDocuments] = useState([]);
 
-  // Search/filter states
+  // 🔍 Search states
   const [userSearch, setUserSearch] = useState("");
   const [docSearch, setDocSearch] = useState("");
+  const [logSearch, setLogSearch] = useState("");
 
+  // 📄 Pagination states
+  const [userPage, setUserPage] = useState(1);
+  const [userPageSize, setUserPageSize] = useState(5);
+
+  const [docPage, setDocPage] = useState(1);
+  const [docPageSize, setDocPageSize] = useState(5);
+
+  const [logPage, setLogPage] = useState(1);
+  const [logPageSize, setLogPageSize] = useState(5);
+
+  // =============================
+  // 📌 Mock data (replace with API calls later)
+  // =============================
   useEffect(() => {
-    // ✅ Users → backend: GET /api/users
     setUsers([
       { id: 1, name: "Mattia", email: "mattia@sllb.gov.sl", role: "Admin" },
       { id: 2, name: "Fatmata K.", email: "fatmata@hq.sllb.sl", role: "Chief Librarian" },
       { id: 3, name: "Andrew", email: "andrew@bo.sllb.sl", role: "Regional Librarian" },
       { id: 4, name: "Mariama", email: "mariama@kenema.sllb.sl", role: "User" },
+      { id: 5, name: "Joseph", email: "joseph@makeni.sllb.sl", role: "User" },
+      { id: 6, name: "Isatu", email: "isatu@kono.sllb.sl", role: "User" },
+      { id: 7, name: "Patrick", email: "patrick@freetown.sllb.sl", role: "Staff" },
     ]);
 
-    // ✅ Documents → backend: GET /api/documents
     setDocuments([
       { id: 1, file: "Budget Report", type: "Finance", folder: "Finance", date: "2025-01-10" },
       { id: 2, file: "Staff Policy", type: "HR", folder: "HR Documents", date: "2025-02-02" },
       { id: 3, file: "Library Rules", type: "General", folder: "Personal", date: "2025-03-01" },
+      { id: 4, file: "Strategic Plan", type: "Admin", folder: "HQ", date: "2025-03-10" },
+      { id: 5, file: "Annual Report", type: "Finance", folder: "Finance", date: "2025-03-15" },
+      { id: 6, file: "Training Notes", type: "HR", folder: "Staff Docs", date: "2025-03-20" },
     ]);
 
-    // ✅ Folders → backend: GET /api/folders
     setFolders([{ id: 1 }, { id: 2 }, { id: 3 }]);
-
-    // ✅ Approvals → backend: GET /api/approvals
     setApprovals([{ id: 1, type: "Trash Request", doc: "Finance Report" }]);
 
-    // ✅ Audit logs → backend: GET /api/audit-logs
-    setAuditLogs([{ id: 1, user: "Mattia", action: "Uploaded", target: "Policy.pdf", date: "Today" }]);
+    setAuditLogs([
+      { id: 1, user: "Mattia", action: "Uploaded", target: "Policy.pdf", date: "Today" },
+      { id: 2, user: "Fatmata", action: "Viewed", target: "Finance.xlsx", date: "Yesterday" },
+      { id: 3, user: "Andrew", action: "Deleted", target: "Old_Report.docx", date: "Last Week" },
+      { id: 4, user: "Mariama", action: "Uploaded", target: "Minutes.pdf", date: "2025-02-01" },
+      { id: 5, user: "Joseph", action: "Downloaded", target: "Rules.pdf", date: "2025-01-20" },
+      { id: 6, user: "Patrick", action: "Edited", target: "Annual Plan.docx", date: "2025-01-15" },
+    ]);
   }, []);
 
-  // 📊 Analytics
+  // =============================
+  // 📊 Analytics mock data
+  // =============================
   const analytics = [
     { month: "Jan", uploads: 12 },
     { month: "Feb", uploads: 18 },
     { month: "Mar", uploads: 9 },
   ];
 
-  // Role management
-  const promoteUser = (id) => {
-    setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, role: "Admin" } : u)));
-    // TODO: Backend PATCH /api/users/:id/role
-  };
-  const demoteUser = (id) => {
-    setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, role: "User" } : u)));
-    // TODO: Backend PATCH /api/users/:id/role
-  };
-
-  // Export logs
+  // =============================
+  // 📤 Export audit logs as CSV
+  // =============================
   const exportLogs = () => {
     const headers = ["User", "Action", "Target", "Date"];
     const rows = auditLogs.map((l) => [l.user, l.action, l.target, l.date]);
@@ -84,7 +106,9 @@ const AdminDashboard = () => {
     a.click();
   };
 
-  // Filters
+  // =============================
+  // 🔍 Filters (search functionality)
+  // =============================
   const filteredUsers = users.filter(
     (u) =>
       u.name.toLowerCase().includes(userSearch.toLowerCase()) ||
@@ -97,12 +121,43 @@ const AdminDashboard = () => {
       d.type.toLowerCase().includes(docSearch.toLowerCase()) ||
       d.folder.toLowerCase().includes(docSearch.toLowerCase())
   );
+  const filteredLogs = auditLogs.filter(
+    (l) =>
+      l.user.toLowerCase().includes(logSearch.toLowerCase()) ||
+      l.action.toLowerCase().includes(logSearch.toLowerCase()) ||
+      l.target.toLowerCase().includes(logSearch.toLowerCase()) ||
+      l.date.toLowerCase().includes(logSearch.toLowerCase())
+  );
+
+  // =============================
+  // 📄 Pagination logic
+  // =============================
+  const paginate = (data, page, pageSize) =>
+    pageSize === "all" ? data : data.slice((page - 1) * pageSize, page * pageSize);
+
+  const calcRange = (data, page, pageSize) => {
+    if (pageSize === "all") return [1, data.length];
+    const start = (page - 1) * pageSize + 1;
+    const end = Math.min(page * pageSize, data.length);
+    return [start, end];
+  };
+
+  const totalPages = (data, pageSize) =>
+    pageSize === "all" ? 1 : Math.ceil(data.length / pageSize);
+
+  const [userStart, userEnd] = calcRange(filteredUsers, userPage, userPageSize);
+  const [docStart, docEnd] = calcRange(filteredDocs, docPage, docPageSize);
+  const [logStart, logEnd] = calcRange(filteredLogs, logPage, logPageSize);
+
+  const paginatedUsers = paginate(filteredUsers, userPage, userPageSize);
+  const paginatedDocs = paginate(filteredDocs, docPage, docPageSize);
+  const paginatedLogs = paginate(filteredLogs, logPage, logPageSize);
 
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">Welcome Back, Admin 👋</h2>
 
-      {/* Summary */}
+      {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card title="Total Users" value={users.length} icon={<Users />} color="blue" />
         <Card title="Folders" value={folders.length} icon={<FolderPlus />} color="yellow" />
@@ -122,90 +177,47 @@ const AdminDashboard = () => {
         </ResponsiveContainer>
       </div>
 
-      {/* Users + Search */}
-      <div className="bg-white dark:bg-gray-800 p-4 rounded shadow">
-        <div className="flex justify-between items-center mb-3">
-          <h3 className="font-semibold">👥 Manage Users</h3>
-          <button
-            onClick={() => navigate("/create-user")}
-            className="bg-blue-600 text-white px-3 py-2 rounded flex items-center gap-1"
-          >
-            <Plus size={16} /> Add User
-          </button>
-        </div>
-        <div className="relative mb-3">
-          <Search size={16} className="absolute left-3 top-2.5 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search users..."
-            value={userSearch}
-            onChange={(e) => setUserSearch(e.target.value)}
-            className="pl-9 pr-3 py-2 border rounded w-full dark:bg-gray-700 dark:text-white"
-          />
-        </div>
-        <table className="w-full text-sm">
-          <thead className="bg-blue-600 text-white">
-            <tr>
-              <th className="p-2 text-start">Name</th>
-              <th className="p-2 text-start">Email</th>
-              <th className="p-2 text-start">Role</th>
-              <th className="p-2 text-start">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredUsers.map((u) => (
-              <tr key={u.id} className="border-b">
-                <td className="p-2">{u.name}</td>
-                <td className="p-2">{u.email}</td>
-                <td className="p-2">{u.role}</td>
-                <td className="p-2 flex gap-2">
-                  <button onClick={() => promoteUser(u.id)} className="text-green-600 flex items-center gap-1">
-                    <ArrowUpCircle size={14} /> Promote
-                  </button>
-                  <button onClick={() => demoteUser(u.id)} className="text-red-600 flex items-center gap-1">
-                    <ArrowDownCircle size={14} /> Demote
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      {/* Manage Users */}
+      <SectionWithSearch
+        title="👥 Manage Users"
+        searchValue={userSearch}
+        onSearch={setUserSearch}
+        placeholder="Search users..."
+        buttonLabel="Add User"
+        onButtonClick={() => navigate("/create-user")}
+        columns={["Name", "Email", "Role"]}
+        data={paginatedUsers.map((u) => [u.name, u.email, u.role])}
+        paginationProps={{
+          currentPage: userPage,
+          totalPages: totalPages(filteredUsers, userPageSize),
+          pageSize: userPageSize,
+          totalItems: filteredUsers.length,
+          startIdx: userStart,
+          endIdx: userEnd,
+          onPageChange: setUserPage,
+          onPageSizeChange: setUserPageSize,
+        }}
+      />
 
-      {/* Documents + Search */}
-      <div className="bg-white dark:bg-gray-800 p-4 rounded shadow">
-        <h3 className="font-semibold mb-3">📂 All Documents</h3>
-        <div className="relative mb-3">
-          <Search size={16} className="absolute left-3 top-2.5 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search documents..."
-            value={docSearch}
-            onChange={(e) => setDocSearch(e.target.value)}
-            className="pl-9 pr-3 py-2 border rounded w-full dark:bg-gray-700 dark:text-white"
-          />
-        </div>
-        <table className="w-full text-sm">
-          <thead className="bg-blue-600 text-white">
-            <tr>
-              <th className="p-2 text-start">Title</th>
-              <th className="p-2 text-start">Type</th>
-              <th className="p-2 text-start">Folder</th>
-              <th className="p-2 text-start">Date</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredDocs.map((d) => (
-              <tr key={d.id} className="border-b">
-                <td className="p-2">{d.file}</td>
-                <td className="p-2">{d.type}</td>
-                <td className="p-2">{d.folder}</td>
-                <td className="p-2">{d.date}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      {/* Documents */}
+      <SectionWithSearch
+        title="📂 All Documents"
+        searchValue={docSearch}
+        onSearch={setDocSearch}
+        placeholder="Search documents..."
+        columns={["Title", "Type", "Folder", "Date"]}
+        data={paginatedDocs.map((d) => [d.file, d.type, d.folder, d.date])}
+        paginationProps={{
+          currentPage: docPage,
+          totalPages: totalPages(filteredDocs, docPageSize),
+          pageSize: docPageSize,
+          totalItems: filteredDocs.length,
+          startIdx: docStart,
+          endIdx: docEnd,
+          onPageChange: setDocPage,
+          onPageSizeChange: setDocPageSize,
+        }}
+      />
 
       {/* Approvals */}
       <div className="bg-white dark:bg-gray-800 p-4 rounded shadow">
@@ -218,8 +230,12 @@ const AdminDashboard = () => {
               <li key={a.id} className="flex justify-between border-b pb-2">
                 <span>{a.type}: {a.doc}</span>
                 <div className="flex gap-2">
-                  <button className="text-green-600 flex items-center gap-1"><CheckCircle size={14} /> Approve</button>
-                  <button className="text-red-600 flex items-center gap-1"><XCircle size={14} /> Reject</button>
+                  <button className="text-green-600 flex items-center gap-1">
+                    <CheckCircle size={14} /> Approve
+                  </button>
+                  <button className="text-red-600 flex items-center gap-1">
+                    <XCircle size={14} /> Reject
+                  </button>
                 </div>
               </li>
             ))}
@@ -228,26 +244,163 @@ const AdminDashboard = () => {
       </div>
 
       {/* Audit Logs */}
-      <div className="bg-white dark:bg-gray-800 p-4 rounded shadow">
-        <div className="flex justify-between items-center mb-3">
-          <h3 className="font-semibold">📜 Recent Activity (Audit Logs)</h3>
-          <button onClick={exportLogs} className="text-blue-600 flex items-center gap-1">
-            <Download size={16} /> Export CSV
-          </button>
-        </div>
-        <ul className="space-y-2 text-sm">
-          {auditLogs.map((log) => (
-            <li key={log.id} className="flex justify-between border-b pb-1">
-              <span><b>{log.user}</b> {log.action} <i>{log.target}</i></span>
-              <span className="text-gray-500">{log.date}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
+      <SectionWithSearch
+        title="📜 Recent Activity (Audit Logs)"
+        searchValue={logSearch}
+        onSearch={setLogSearch}
+        placeholder="Search logs..."
+        buttonLabel="Export CSV"
+        onButtonClick={exportLogs}
+        columns={["User", "Action", "Target", "Date"]}
+        data={paginatedLogs.map((l) => [l.user, l.action, l.target, l.date])}
+        paginationProps={{
+          currentPage: logPage,
+          totalPages: totalPages(filteredLogs, logPageSize),
+          pageSize: logPageSize,
+          totalItems: filteredLogs.length,
+          startIdx: logStart,
+          endIdx: logEnd,
+          onPageChange: setLogPage,
+          onPageSizeChange: setLogPageSize,
+        }}
+      />
     </div>
   );
 };
 
+// ✅ Section with Search First, then Button
+const SectionWithSearch = ({
+  title,
+  searchValue,
+  onSearch,
+  placeholder,
+  buttonLabel,
+  onButtonClick,
+  columns,
+  data,
+  paginationProps,
+}) => (
+  <div className="bg-white dark:bg-gray-800 p-4 rounded shadow">
+    {/* Header row with search first, then button */}
+    <div className="flex justify-between items-center mb-3">
+      <h3 className="font-semibold">{title}</h3>
+    </div>
+
+    <div className="flex justify-between items-center mb-3">
+      {/* Search first */}
+      <div className="relative w-64">
+        <Search size={16} className="absolute left-3 top-2.5 text-gray-400" />
+        <input
+          type="text"
+          placeholder={placeholder}
+          value={searchValue}
+          onChange={(e) => {
+            onSearch(e.target.value);
+            paginationProps.onPageChange(1);
+          }}
+          className="pl-9 pr-3 py-2 border rounded w-full dark:bg-gray-700 dark:text-white"
+        />
+      </div>
+
+      {/* Button second */}
+      {buttonLabel && (
+        <button
+          onClick={onButtonClick}
+          className="bg-blue-600 text-white px-3 py-2 rounded flex items-center gap-1"
+        >
+          {buttonLabel}
+        </button>
+      )}
+    </div>
+
+    {/* Table */}
+    <table className="w-full text-sm">
+      <thead className="bg-blue-600 text-white">
+        <tr>
+          {columns.map((col) => (
+            <th key={col} className="p-2 text-start">
+              {col}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {data.map((row, idx) => (
+          <tr key={idx} className="border-b">
+            {row.map((cell, i) => (
+              <td key={i} className="p-2">
+                {cell}
+              </td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+
+    {/* Pagination */}
+    <PaginationControls {...paginationProps} />
+  </div>
+);
+
+// ✅ Reusable Pagination Component
+const PaginationControls = ({
+  currentPage,
+  totalPages,
+  pageSize,
+  totalItems,
+  startIdx,
+  endIdx,
+  onPageChange,
+  onPageSizeChange,
+}) => (
+  <div className="flex justify-between items-center mt-3 text-sm">
+    <span>
+      Showing {startIdx}–{endIdx} of {totalItems}
+    </span>
+    <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2">
+        <span>Rows per page:</span>
+        <select
+          value={pageSize}
+          onChange={(e) => {
+            const value = e.target.value === "all" ? "all" : parseInt(e.target.value);
+            onPageSizeChange(value);
+            onPageChange(1);
+          }}
+          className="border rounded px-2 py-1 dark:bg-gray-700 dark:text-white"
+        >
+          <option value={5}>5</option>
+          <option value={10}>10</option>
+          <option value={20}>20</option>
+          <option value="all">All</option>
+        </select>
+      </div>
+      {pageSize !== "all" && totalPages > 1 && (
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => onPageChange(Math.max(currentPage - 1, 1))}
+            disabled={currentPage === 1}
+            className="px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded disabled:opacity-50"
+          >
+            Prev
+          </button>
+          <span>
+            Page {currentPage} of {totalPages}
+          </span>
+          <button
+            onClick={() => onPageChange(Math.min(currentPage + 1, totalPages))}
+            disabled={currentPage === totalPages}
+            className="px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
+      )}
+    </div>
+  </div>
+);
+
+// ✅ Small summary card
 const Card = ({ title, value, icon, color }) => (
   <div className={`p-4 rounded-md shadow bg-${color}-100 text-${color}-800`}>
     <div className="flex justify-between items-center">
