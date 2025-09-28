@@ -10,6 +10,7 @@ const FolderView = () => {
       email: "",
       id: "",
     };
+
   const [folders, setFolders] = useState([]);
   const [search, setSearch] = useState("");
   const navigate = useNavigate();
@@ -24,7 +25,7 @@ const FolderView = () => {
           name: "HQ Management",
           description: "Headquarters documents",
           ownerId: "admin",
-          allowedUsers: ["Admin/HR"],
+          allowedUsers: ["Admin", "Admin/HR"],
         },
         {
           id: 2,
@@ -44,25 +45,40 @@ const FolderView = () => {
       localStorage.setItem("folders", JSON.stringify(defaultFolders));
       setFolders(defaultFolders);
     } else {
-      const filtered =
-        user.role === "Admin" || user.role === "Admin/HR"
-          ? stored
-          : stored.filter(
-              (f) =>
-                f.ownerId === user.id ||
-                f.allowedUsers.includes(user.role) ||
-                f.allowedUsers.includes(user.email)
-            );
-      setFolders(filtered);
+      setFolders(stored);
     }
-  }, [user]);
+  }, []);
 
-  // Count docs inside each folder
+  // ✅ Check if user can open a folder
+  const canOpenFolder = (folder) => {
+    return (
+      user.role === "Admin" ||
+      user.role === "Admin/HR" ||
+      folder.ownerId === user.id ||
+      folder.allowedUsers.includes(user.role) ||
+      folder.allowedUsers.includes(user.email)
+    );
+  };
+
+  // ✅ Count docs inside each folder
   const getFileCount = (folderName) => {
     const allDocs =
       JSON.parse(localStorage.getItem("uploadedDocuments")) || [];
     return allDocs.filter((doc) => doc.folder === folderName).length;
   };
+
+  // ✅ Filter folders by search
+  const filteredFolders = folders.filter((f) =>
+    f.name.toLowerCase().includes(search.toLowerCase())
+  );
+
+  // ------------------------------
+  // OPTION A: Keep restricted visible but locked
+  // const visibleFolders = filteredFolders;
+
+  // OPTION B: Hide restricted folders completely
+  const visibleFolders = filteredFolders.filter((f) => canOpenFolder(f));
+  // ------------------------------
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -91,29 +107,36 @@ const FolderView = () => {
 
       {/* Folder Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-        {folders
-          .filter((f) => f.name.toLowerCase().includes(search.toLowerCase()))
-          .map((folder) => (
-            <div
-              key={folder.id}
-              onClick={() =>
-                navigate("/folder-documents", { state: { folder: folder.name } })
+        {visibleFolders.map((folder) => (
+          <div
+            key={folder.id}
+            onClick={() =>
+              canOpenFolder(folder) &&
+              navigate("/folder-documents", { state: { folder: folder.name } })
+            }
+            className={`bg-white border rounded-lg shadow-sm p-4 flex flex-col items-center text-center transition
+              ${
+                canOpenFolder(folder)
+                  ? "cursor-pointer hover:shadow-md"
+                  : "cursor-not-allowed opacity-50"
               }
-              className="bg-white border rounded-lg shadow-sm hover:shadow-md cursor-pointer p-4 flex flex-col items-center text-center transition"
-            >
-              <FolderIcon
-                size={48}
-                className="text-yellow-500 mb-2"
-                fill="currentColor"
-              />
-              <h3 className="text-sm font-semibold text-gray-700">
-                {folder.name}
-              </h3>
-              <p className="text-xs text-gray-500">
-                {getFileCount(folder.name)} files
-              </p>
-            </div>
-          ))}
+            `}
+          >
+            <FolderIcon
+              size={48}
+              className="text-yellow-500 mb-2"
+              fill="currentColor"
+            />
+            <h3 className="text-sm font-semibold text-gray-700">
+              {folder.name}
+            </h3>
+            <p className="text-xs text-gray-500">
+              {canOpenFolder(folder)
+                ? `${getFileCount(folder.name)} files`
+                : "Restricted"}
+            </p>
+          </div>
+        ))}
       </div>
     </div>
   );

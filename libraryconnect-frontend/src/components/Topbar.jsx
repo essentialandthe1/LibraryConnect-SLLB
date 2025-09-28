@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Bell, LogOut, Settings, ChevronsLeft, ChevronsRight } from "lucide-react";
+import { Bell, LogOut, Settings } from "lucide-react";
 import logo from "../assets/logo.png";
 import { useNavigate } from "react-router-dom";
 
-const Topbar = ({ toggleSidebar, collapsed, setCollapsed }) => {
+const Topbar = ({ toggleSidebar }) => {
   const navigate = useNavigate();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -50,17 +50,8 @@ const Topbar = ({ toggleSidebar, collapsed, setCollapsed }) => {
 
   return (
     <div className="bg-white dark:bg-gray-800 px-4 py-3 shadow-sm flex justify-between items-center sticky top-0 z-50">
-      {/* Left side: collapse toggle + logo */}
+      {/* Left side: logo only */}
       <div className="flex items-center gap-3">
-        {/* Collapse toggle for desktop */}
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="hidden md:block text-gray-600 dark:text-gray-300 hover:text-blue-600"
-        >
-          {collapsed ? <ChevronsRight size={20} /> : <ChevronsLeft size={20} />}
-        </button>
-
-        {/* Logo */}
         <img src={logo} alt="SLLB Logo" className="w-6 h-6 md:w-8 md:h-8" />
         <span className="font-bold text-blue-600 dark:text-blue-300 text-base md:text-lg">
           SLLB
