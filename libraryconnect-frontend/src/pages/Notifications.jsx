@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { Search } from "lucide-react";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
@@ -10,6 +11,7 @@ dayjs.extend(isToday);
 dayjs.extend(isSameOrAfter);
 
 const Notifications = () => {
+  const location = useLocation();
   const currentUser =
     JSON.parse(localStorage.getItem("userInfo")) || { role: "", email: "" };
 
@@ -18,179 +20,150 @@ const Notifications = () => {
   const [filter, setFilter] = useState("all");
 
   useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem("notifications")) || [];
+    const loadNotifications = () => {
+      const stored = JSON.parse(localStorage.getItem("notifications")) || [];
 
-    // 👉 show only notifications for this user
-    const userNotifs = stored.filter(
-      (n) =>
-        !n.recipient ||
-        n.recipient.toLowerCase() === currentUser.role.toLowerCase() ||
-        n.recipient.toLowerCase() === currentUser.email.toLowerCase()
-    );
-
-    setNotifications(userNotifs);
-  }, [currentUser]);
-
-  // ✅ Mark as read
-  const markAsRead = (index) => {
-    const updated = [...notifications];
-    updated[index].unread = false;
-    setNotifications(updated);
-
-    // sync back to global storage
-    const stored = JSON.parse(localStorage.getItem("notifications")) || [];
-    const globalIndex = stored.findIndex(
-      (n) => n.id === notifications[index].id
-    );
-    if (globalIndex !== -1) {
-      stored[globalIndex].unread = false;
-      localStorage.setItem("notifications", JSON.stringify(stored));
-    }
-  };
-
-  // ✅ Approve/Reject trash requests
-  const handleAction = (notif, approve) => {
-    let trashedDocs =
-      JSON.parse(localStorage.getItem("trashedDocuments")) || [];
-
-    if (approve) {
-      // allow permanent delete
-      trashedDocs = trashedDocs.map((doc) =>
-        doc.id === notif.docId ? { ...doc, pendingApproval: false } : doc
+      const userNotifs = stored.filter(
+        (n) =>
+          !n.recipient ||
+          n.recipient.toLowerCase() === currentUser.role.toLowerCase() ||
+          n.recipient.toLowerCase() === currentUser.email.toLowerCase()
       );
-      alert(`✅ You approved deletion of "${notif.title}"`);
-    } else {
-      // restore the document instead
-      const doc = trashedDocs.find((d) => d.id === notif.docId);
-      if (doc) {
-        const uploadedDocs =
-          JSON.parse(localStorage.getItem("uploadedDocuments")) || [];
-        uploadedDocs.push(doc);
-        localStorage.setItem(
-          "uploadedDocuments",
-          JSON.stringify(uploadedDocs)
-        );
-        trashedDocs = trashedDocs.filter((d) => d.id !== notif.docId);
-      }
-      alert(`❌ You rejected deletion. Document restored.`);
-    }
 
-    localStorage.setItem("trashedDocuments", JSON.stringify(trashedDocs));
+      setNotifications(userNotifs);
+    };
 
-    // remove this notification
-    const updatedNotifs = notifications.filter((n) => n.id !== notif.id);
-    setNotifications(updatedNotifs);
+    loadNotifications();
+    window.addEventListener("storage", loadNotifications);
 
-    const global = JSON.parse(localStorage.getItem("notifications")) || [];
-    localStorage.setItem(
-      "notifications",
-      JSON.stringify(global.filter((n) => n.id !== notif.id))
+    return () => window.removeEventListener("storage", loadNotifications);
+  }, [currentUser, location]);
+
+  // ✅ Mark all as read
+  const markAllAsRead = () => {
+    const stored = JSON.parse(localStorage.getItem("notifications")) || [];
+
+    const updated = stored.map((n) =>
+      !n.recipient ||
+      n.recipient.toLowerCase() === currentUser.role.toLowerCase() ||
+      n.recipient.toLowerCase() === currentUser.email.toLowerCase()
+        ? { ...n, read: true }
+        : n
+    );
+
+    localStorage.setItem("notifications", JSON.stringify(updated));
+    setNotifications(
+      updated.filter(
+        (n) =>
+          !n.recipient ||
+          n.recipient.toLowerCase() === currentUser.role.toLowerCase() ||
+          n.recipient.toLowerCase() === currentUser.email.toLowerCase()
+      )
     );
   };
 
-  // 🔎 Filtering
-  const filtered = notifications.filter((n) => {
-    const matchesText =
-      (n.title || "").toLowerCase().includes(search.toLowerCase()) ||
-      (n.sender || "").toLowerCase().includes(search.toLowerCase());
+  // ✅ Mark single notification as read
+  const markOneAsRead = (id) => {
+    const stored = JSON.parse(localStorage.getItem("notifications")) || [];
 
-    const timestamp = dayjs(n.timestamp);
-    const matchesDate =
-      filter === "all" ||
-      (filter === "today" && timestamp.isToday()) ||
-      (filter === "week" &&
-        timestamp.isSameOrAfter(dayjs().subtract(7, "day")));
+    const updated = stored.map((n) =>
+      n.id === id ? { ...n, read: true } : n
+    );
 
-    return matchesText && matchesDate;
-  });
+    localStorage.setItem("notifications", JSON.stringify(updated));
+    setNotifications(
+      updated.filter(
+        (n) =>
+          !n.recipient ||
+          n.recipient.toLowerCase() === currentUser.role.toLowerCase() ||
+          n.recipient.toLowerCase() === currentUser.email.toLowerCase()
+      )
+    );
+  };
+
+  const filteredNotifications = notifications
+    .filter((n) =>
+      n.message.toLowerCase().includes(search.toLowerCase())
+    )
+    .filter((n) => {
+      if (filter === "unread") return !n.read;
+      if (filter === "today") return dayjs(n.timestamp).isToday();
+      return true;
+    })
+    .sort((a, b) => dayjs(b.timestamp).diff(dayjs(a.timestamp)));
 
   return (
-    <div className="bg-white dark:bg-gray-800 p-6 rounded-md shadow max-w-4xl mx-auto">
-      {/* Header + filters */}
-      <div className="flex flex-wrap justify-between items-center gap-3 mb-5">
-        <h2 className="text-xl font-bold text-gray-800 dark:text-white">
-          🔔 Notifications
-        </h2>
-
-        <div className="flex gap-2 items-center">
-          <select
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            className="px-3 py-2 rounded border text-sm dark:bg-gray-700 dark:text-white"
+    <div className="p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Notifications</h1>
+        {notifications.some((n) => !n.read) && (
+          <button
+            onClick={markAllAsRead}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
           >
-            <option value="all">All</option>
-            <option value="today">Today</option>
-            <option value="week">This Week</option>
-          </select>
-
-          <div className="relative">
-            <Search
-              size={16}
-              className="absolute left-3 top-2.5 text-gray-400"
-            />
-            <input
-              type="text"
-              placeholder="Search title/sender"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 pr-3 py-2 border rounded text-sm w-64 dark:bg-gray-700 dark:text-white"
-            />
-          </div>
-        </div>
+            Mark all as read
+          </button>
+        )}
       </div>
 
-      {/* Notifications list */}
-      {filtered.length === 0 ? (
-        <p className="text-sm text-gray-500 dark:text-gray-400">
-          No notifications found.
-        </p>
-      ) : (
-        <ul className="space-y-4">
-          {filtered.map((n, i) => (
-            <li
+      {/* Search + Filter */}
+      <div className="flex items-center gap-4 mb-6">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-3 text-gray-400" size={18} />
+          <input
+            type="text"
+            placeholder="Search notifications..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+          />
+        </div>
+
+        <select
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          className="border rounded-lg px-3 py-2 focus:outline-none focus:ring focus:ring-blue-300"
+        >
+          <option value="all">All</option>
+          <option value="unread">Unread</option>
+          <option value="today">Today</option>
+        </select>
+      </div>
+
+      {/* Notifications List */}
+      <div className="space-y-4">
+        {filteredNotifications.length > 0 ? (
+          filteredNotifications.map((n) => (
+            <div
               key={n.id}
-              className={`flex justify-between items-start border-b pb-3 p-2 rounded ${
-                n.unread ? "bg-blue-50 dark:bg-blue-900/30" : ""
+              className={`p-4 rounded-lg shadow-sm border flex justify-between items-start ${
+                n.read ? "bg-white" : "bg-blue-50"
               }`}
             >
               <div>
-                <p className="font-medium text-gray-800 dark:text-white">
-                  {n.title || "Untitled Notification"}
-                </p>
-                {n.sender && (
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    {n.sender}
-                  </p>
-                )}
-
-                {/* If action is approve-delete → show buttons */}
-                {n.action === "approve-delete" && (
-                  <div className="mt-2 space-x-2">
-                    <button
-                      onClick={() => handleAction(n, true)}
-                      className="px-2 py-1 text-xs bg-green-600 text-white rounded"
-                    >
-                      Approve
-                    </button>
-                    <button
-                      onClick={() => handleAction(n, false)}
-                      className="px-2 py-1 text-xs bg-red-600 text-white rounded"
-                    >
-                      Reject
-                    </button>
-                  </div>
-                )}
+                <p className="text-gray-800">{n.message}</p>
+                <div className="text-xs text-gray-500 mt-1">
+                  {n.recipient ? `To: ${n.recipient}` : "To: All"}
+                </div>
+                <span className="text-sm text-gray-500">
+                  {dayjs(n.timestamp).fromNow()}
+                </span>
               </div>
-              <span
-                className="text-xs text-gray-400 dark:text-gray-500 cursor-pointer"
-                onClick={() => markAsRead(i)}
-              >
-                {n.timestamp ? dayjs(n.timestamp).fromNow() : "Unknown time"}
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
+
+              {!n.read && (
+                <button
+                  onClick={() => markOneAsRead(n.id)}
+                  className="ml-4 px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700"
+                >
+                  Mark as read
+                </button>
+              )}
+            </div>
+          ))
+        ) : (
+          <p className="text-gray-500 text-center">No notifications found.</p>
+        )}
+      </div>
     </div>
   );
 };

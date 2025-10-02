@@ -1,28 +1,32 @@
 // src/pages/EditUser.jsx
-import React, { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import React, { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { Eye, EyeOff } from "lucide-react"; // 👁️ import eye icons
 
 const EditUser = () => {
   const navigate = useNavigate();
   const { email } = useParams();
 
   const [form, setForm] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    role: '',
-    branch: '',
-    status: 'active',
+    name: "",
+    email: "",
+    phone: "",
+    role: "",
+    branch: "",
+    status: "active",
+    password: "",
   });
 
+  const [showPassword, setShowPassword] = useState(false); // 👁️ toggle state
+
   useEffect(() => {
-    const users = JSON.parse(localStorage.getItem('users')) || [];
+    const users = JSON.parse(localStorage.getItem("users")) || [];
     const user = users.find((u) => u.email.toLowerCase() === email.toLowerCase());
     if (user) {
       setForm({ ...user });
     } else {
-      alert('User not found!');
-      navigate('/manage-users');
+      alert("User not found!");
+      navigate("/manage-users");
     }
   }, [email, navigate]);
 
@@ -37,24 +41,33 @@ const EditUser = () => {
   const handleUpdate = (e) => {
     e.preventDefault();
 
-    const users = JSON.parse(localStorage.getItem('users')) || [];
+    const users = JSON.parse(localStorage.getItem("users")) || [];
     const updatedUsers = users.map((u) =>
       u.email.toLowerCase() === email.toLowerCase() ? { ...form } : u
     );
 
-    localStorage.setItem('users', JSON.stringify(updatedUsers));
+    localStorage.setItem("users", JSON.stringify(updatedUsers));
+
+    // ⚠️ Backend placeholder
+    // await api.updateUser(email, form);
+
     alert(`✅ "${form.name}" updated successfully!`);
-    navigate('/manage-users');
+    navigate("/manage-users");
   };
 
   return (
     <div className="max-w-2xl mx-auto bg-white dark:bg-gray-800 p-6 rounded-md shadow">
-      <h2 className="text-xl font-bold mb-6 text-gray-800 dark:text-white">Edit User</h2>
+      <h2 className="text-xl font-bold mb-6 text-gray-800 dark:text-white">
+        Edit User
+      </h2>
 
       <form onSubmit={handleUpdate} className="space-y-4">
+
         {/* Name */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">Full Name</label>
+          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+            Full Name
+          </label>
           <input
             type="text"
             name="name"
@@ -67,7 +80,9 @@ const EditUser = () => {
 
         {/* Email (disabled) */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">Email Address</label>
+          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+            Email Address
+          </label>
           <input
             type="email"
             value={form.email}
@@ -78,7 +93,9 @@ const EditUser = () => {
 
         {/* Phone */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">Phone</label>
+          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+            Phone
+          </label>
           <input
             type="tel"
             name="phone"
@@ -91,7 +108,9 @@ const EditUser = () => {
 
         {/* Role */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">User Role</label>
+          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+            User Role
+          </label>
           <select
             name="role"
             value={form.role}
@@ -107,7 +126,9 @@ const EditUser = () => {
 
         {/* Branch */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">Branch/Department</label>
+          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+            Branch/Department
+          </label>
           <select
             name="branch"
             value={form.branch}
@@ -122,16 +143,45 @@ const EditUser = () => {
           </select>
         </div>
 
-        {/* Status */}
+        {/* ✅ Password with show/hide */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">Account Status</label>
+          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+            Password
+          </label>
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              name="password"
+              value={form.password}
+              onChange={handleChange}
+              placeholder="Enter new password"
+              className="w-full mt-1 px-3 py-2 border rounded-md dark:bg-gray-700 dark:text-white pr-10"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute inset-y-0 right-2 flex items-center text-gray-500"
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
+          <small className="text-gray-500">
+            Leave blank if you don’t want to change the password.
+          </small>
+        </div>
+
+        {/* ✅ Status moved to the top */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+            Account Status
+          </label>
           <div className="flex gap-4 items-center mt-1">
             <label className="flex items-center gap-2">
               <input
                 type="radio"
                 name="status"
                 value="active"
-                checked={form.status === 'active'}
+                checked={form.status === "active"}
                 onChange={handleChange}
               />
               Active
@@ -141,7 +191,7 @@ const EditUser = () => {
                 type="radio"
                 name="status"
                 value="inactive"
-                checked={form.status === 'inactive'}
+                checked={form.status === "inactive"}
                 onChange={handleChange}
               />
               Inactive
@@ -159,7 +209,7 @@ const EditUser = () => {
           </button>
           <button
             type="button"
-            onClick={() => navigate('/manage-users')}
+            onClick={() => navigate("/manage-users")}
             className="w-full bg-gray-300 text-gray-800 py-2 rounded-md hover:bg-gray-400 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
           >
             Cancel

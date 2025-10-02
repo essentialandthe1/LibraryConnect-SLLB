@@ -1,145 +1,115 @@
-// src/pages/FolderView.jsx
-import React, { useEffect, useState } from "react";
-import { Folder as FolderIcon, FolderPlus } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+// src/pages/Folders.jsx
+import React, { useState } from "react";
+import { Lock, Search } from "lucide-react";
 
-const FolderView = () => {
-  const user =
-    JSON.parse(localStorage.getItem("userInfo")) || {
-      role: "",
-      email: "",
-      id: "",
-    };
+// Example folder data
+const allFolders = [
+  { name: "HQ Management", files: 300, restricted: true },
+  { name: "Admin", files: 250, restricted: true },
+  { name: "Regional Kenema", files: 90, restricted: false },
+  { name: "Regional BO", files: 87, restricted: false },
+  { name: "Regional Makeni", files: 60, restricted: false },
+  { name: "Adult Lending HQ", files: 94, restricted: false },
+  { name: "Cataloguing HQ", files: 200, restricted: false },
+  { name: "Reference HQ", files: 120, restricted: false },
+  { name: "Children's HQ", files: 140, restricted: false },
+  { name: "City Lib - Kenema", files: 80, restricted: false },
+  { name: "City Lib - Bo", files: 88, restricted: false },
+  { name: "City Lib - Makeni", files: 90, restricted: false },
+  { name: "Waterloo Lib", files: 100, restricted: false },
+];
 
-  const [folders, setFolders] = useState([]);
+// TEMP: hardcoded role for now
+const userRole = "admin"; // change to "regular" to see all
+
+const Folders = () => {
   const [search, setSearch] = useState("");
-  const navigate = useNavigate();
 
-  useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem("folders")) || [];
+  // ================================
+  // Option B (default) – hide restricted folders from list
+  // BUT if searched, show them locked 🔒
+  // ================================
+  const baseFolders =
+    userRole === "admin"
+      ? allFolders
+      : allFolders.filter((f) => !f.restricted);
 
-    if (stored.length === 0) {
-      const defaultFolders = [
-        {
-          id: 1,
-          name: "HQ Management",
-          description: "Headquarters documents",
-          ownerId: "admin",
-          allowedUsers: ["Admin", "Admin/HR"],
-        },
-        {
-          id: 2,
-          name: "Regional Kenema",
-          description: "Kenema regional office",
-          ownerId: "chief",
-          allowedUsers: ["Chief Librarian"],
-        },
-        {
-          id: 3,
-          name: "Adult Lending HQ",
-          description: "Adult lending section",
-          ownerId: "user123",
-          allowedUsers: ["user123"],
-        },
-      ];
-      localStorage.setItem("folders", JSON.stringify(defaultFolders));
-      setFolders(defaultFolders);
-    } else {
-      setFolders(stored);
-    }
-  }, []);
-
-  // ✅ Check if user can open a folder
-  const canOpenFolder = (folder) => {
-    return (
-      user.role === "Admin" ||
-      user.role === "Admin/HR" ||
-      folder.ownerId === user.id ||
-      folder.allowedUsers.includes(user.role) ||
-      folder.allowedUsers.includes(user.email)
-    );
-  };
-
-  // ✅ Count docs inside each folder
-  const getFileCount = (folderName) => {
-    const allDocs =
-      JSON.parse(localStorage.getItem("uploadedDocuments")) || [];
-    return allDocs.filter((doc) => doc.folder === folderName).length;
-  };
-
-  // ✅ Filter folders by search
-  const filteredFolders = folders.filter((f) =>
-    f.name.toLowerCase().includes(search.toLowerCase())
+  const searchedFolders = allFolders.filter((folder) =>
+    folder.name.toLowerCase().includes(search.toLowerCase())
   );
 
-  // ------------------------------
-  // OPTION A: Keep restricted visible but locked
-  // const visibleFolders = filteredFolders;
+  const visibleFolders = search ? searchedFolders : baseFolders;
 
-  // OPTION B: Hide restricted folders completely
-  const visibleFolders = filteredFolders.filter((f) => canOpenFolder(f));
-  // ------------------------------
+  // ================================
+  // Option A – always show restricted but locked
+  // Uncomment this if you want restricted folders always visible
+  // ================================
+  /*
+  const visibleFolders = allFolders.filter((folder) =>
+    folder.name.toLowerCase().includes(search.toLowerCase())
+  );
+  */
+
+  // 🔑 BACKEND PLACEHOLDER
+  // Replace `userRole` with actual user.role from auth
+  // Example:
+  // const { user } = useAuth();
+  // const userRole = user?.role || "regular";
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <div className="flex justify-between mb-6">
-        <h2 className="text-2xl font-bold">Folders</h2>
-        {user.role === "Admin" && (
-          <button
-            onClick={() => navigate("/create-folder")}
-            className="flex items-center gap-1 bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700"
-          >
-            <FolderPlus size={16} /> Add Folder
-          </button>
-        )}
-      </div>
+    <div className="p-6">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Folders</h1>
 
-      {/* Search */}
-      <div className="mb-6">
-        <input
-          type="text"
-          className="w-full p-2 border rounded"
-          placeholder="Search folders..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+        {/* Search Bar */}
+        <div className="relative">
+          <Search
+            className="absolute left-3 top-2.5 text-gray-400"
+            size={18}
+          />
+          <input
+            type="text"
+            placeholder="Search folders..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-10 pr-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400"
+          />
+        </div>
       </div>
 
       {/* Folder Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-        {visibleFolders.map((folder) => (
-          <div
-            key={folder.id}
-            onClick={() =>
-              canOpenFolder(folder) &&
-              navigate("/folder-documents", { state: { folder: folder.name } })
-            }
-            className={`bg-white border rounded-lg shadow-sm p-4 flex flex-col items-center text-center transition
-              ${
-                canOpenFolder(folder)
-                  ? "cursor-pointer hover:shadow-md"
-                  : "cursor-not-allowed opacity-50"
-              }
-            `}
-          >
-            <FolderIcon
-              size={48}
-              className="text-yellow-500 mb-2"
-              fill="currentColor"
-            />
-            <h3 className="text-sm font-semibold text-gray-700">
-              {folder.name}
-            </h3>
-            <p className="text-xs text-gray-500">
-              {canOpenFolder(folder)
-                ? `${getFileCount(folder.name)} files`
-                : "Restricted"}
-            </p>
-          </div>
-        ))}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        {visibleFolders.length > 0 ? (
+          visibleFolders.map((folder, index) => (
+            <div
+              key={index}
+              className={`p-4 rounded-2xl shadow-md flex flex-col items-center justify-center text-center cursor-pointer 
+                ${folder.restricted && userRole !== "admin"
+                  ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                  : "bg-yellow-100 hover:bg-yellow-200"
+                }`}
+            >
+              <div className="text-5xl mb-2">📁</div>
+              <h2 className="font-semibold">{folder.name}</h2>
+
+              {folder.restricted && userRole !== "admin" ? (
+                <div className="flex items-center gap-1 text-sm">
+                  <Lock size={14} /> <span>Restricted</span>
+                </div>
+              ) : (
+                <p className="text-sm">{folder.files} files</p>
+              )}
+            </div>
+          ))
+        ) : (
+          <p className="col-span-full text-center text-gray-500">
+            No folders found.
+          </p>
+        )}
       </div>
     </div>
   );
 };
 
-export default FolderView;
+export default Folders;
