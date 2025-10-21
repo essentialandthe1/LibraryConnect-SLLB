@@ -1,3 +1,4 @@
+// src/App.jsx
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
 import RoleBasedLayout from "./layouts/RoleBasedLayout";
@@ -12,13 +13,13 @@ import ViewDocument from "./pages/ViewDocument";
 import FolderView from "./pages/FolderView";
 import Trash from "./pages/Trash";
 import Notifications from "./pages/Notifications";
-import FolderDocuments from "./pages/FolderDocuments"; // ✅ NEW IMPORT
+import FolderDocuments from "./pages/FolderDocuments";
 
 // Dashboards
 import AdminDashboard from "./pages/AdminDashboard";
 import UserDashboard from "./pages/UserDashboard";
 
-// Protected route
+// Protected route wrapper
 import ProtectedRoute from "./components/ProtectedRoute";
 
 const App = () => {
@@ -30,7 +31,7 @@ const App = () => {
 
         {/* Protected routes inside layout */}
         <Route path="/*" element={<RoleBasedLayout />}>
-          {/* 🔐 Admin dashboard */}
+          {/* 🔐 Admin Dashboard */}
           <Route
             path="admin-dashboard"
             element={
@@ -47,7 +48,7 @@ const App = () => {
             }
           />
 
-          {/* 🔐 User dashboard */}
+          {/* 🔐 User Dashboard */}
           <Route
             path="user-dashboard"
             element={
@@ -62,16 +63,12 @@ const App = () => {
           <Route path="upload" element={<Upload />} />
           <Route path="inbox" element={<Inbox />} />
           <Route path="settings" element={<Settings />} />
-
-          {/* Admin tools */}
           <Route path="create-user" element={<CreateUser />} />
           <Route path="manage-users" element={<ManageUsers />} />
           <Route path="edit-user/:email" element={<EditUser />} />
-
-          {/* Documents + folders */}
           <Route path="view-document/:id" element={<ViewDocument />} />
           <Route path="folders" element={<FolderView />} />
-          <Route path="folder-documents" element={<FolderDocuments />} /> {/* ✅ NEW ROUTE */}
+          <Route path="folder-documents" element={<FolderDocuments />} />
           <Route path="trash" element={<Trash />} />
           <Route path="notifications" element={<Notifications />} />
         </Route>

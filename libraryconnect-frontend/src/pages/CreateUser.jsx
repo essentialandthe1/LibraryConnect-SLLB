@@ -1,20 +1,34 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+// src/pages/CreateUser.jsx
+// ============================================================
+// 📌 CREATE USER PAGE
+// ------------------------------------------------------------
+// Handles creating a new user account (admin-only action).
+// Integrates Axios + TanStack Query for clean async logic.
+// Includes comments for backend integration.
+// ============================================================
+
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useMutation } from "@tanstack/react-query";
+import { api } from "../services/api"; // ✅ Reusable Axios instance
+import toast from "react-hot-toast";
 
 const CreateUser = () => {
   const navigate = useNavigate();
 
+  // 🔹 Local state for form inputs
   const [form, setForm] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    role: '',
-    branch: '',
-    password: '',
-    confirmPassword: '',
-    status: 'active',
+    name: "",
+    email: "",
+    phone: "",
+    role: "",
+    branch: "",
+    password: "",
+    confirmPassword: "",
+    status: "active",
   });
 
+  // 🔹 Handle input field updates
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({
@@ -23,213 +37,198 @@ const CreateUser = () => {
     }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (form.password !== form.confirmPassword) {
-      alert('❌ Passwords do not match!');
-      return;
-    }
-
-    try {
-      const response = await fetch('http://127.0.0.1:8000/api/users/admin-create/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`, // JWT token from login
-        },
-        body: JSON.stringify({
-          username: form.name,
-          email: form.email,
-          role: form.role,
-          password: form.password,
-        }),
-      });
-
-      if (response.ok) {
-        alert(`✅ User "${form.name}" created successfully!`);
-        navigate('/manage-users');
-      } else {
-        const err = await response.json();
-        alert('❌ Error: ' + JSON.stringify(err));
+  // ============================================================
+  // 🚀 TanStack Mutation for user creation
+  // ============================================================
+  const { mutate: createUser, isPending } = useMutation({
+    mutationFn: async () => {
+      // 🧩 FRONTEND VALIDATION
+      if (form.password !== form.confirmPassword) {
+        throw new Error("Passwords do not match!");
       }
-    } catch (error) {
-      console.error('User creation failed:', error);
-      alert('❌ Failed to create user. Please try again.');
-    }
+
+      // 🧩 BACKEND ENDPOINT (replace URL when backend ready)
+      const payload = {
+        username: form.name,
+        email: form.email,
+        phone: form.phone,
+        role: form.role,
+        branch: form.branch,
+        password: form.password,
+        status: form.status,
+      };
+
+      // Backend should accept POST /users/admin-create
+      const res = await api.post("/users/admin-create", payload);
+      return res.data;
+    },
+    onSuccess: (data) => {
+      toast.success(`✅ User "${form.name}" created successfully!`);
+      navigate("/manage-users");
+    },
+    onError: (err) => {
+      toast.error(`❌ ${err.message || "Failed to create user"}`);
+      console.error("Error creating user:", err);
+    },
+  });
+
+  // 🔹 Handle Form Submit
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    createUser(); // ⛓️ Trigger API request via mutation
   };
 
+  // 🔹 Reset Form
   const handleClear = () => {
     setForm({
-      name: '',
-      email: '',
-      phone: '',
-      role: '',
-      branch: '',
-      password: '',
-      confirmPassword: '',
-      status: 'active',
+      name: "",
+      email: "",
+      phone: "",
+      role: "",
+      branch: "",
+      password: "",
+      confirmPassword: "",
+      status: "active",
     });
   };
 
+  // ============================================================
+  // 🧭 UI Rendering
+  // ============================================================
   return (
     <div className="max-w-2xl mx-auto bg-white dark:bg-gray-800 p-6 rounded-md shadow">
-      <h2 className="text-xl font-bold mb-6 text-gray-800 dark:text-white">Create New User</h2>
+      <h2 className="text-xl font-bold mb-6 text-gray-800 dark:text-white">
+        Create New User
+      </h2>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Full Name */}
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">Full Name</label>
-          <input
-            type="text"
-            name="name"
-            value={form.name}
-            onChange={handleChange}
-            required
-            placeholder="Enter full name"
-            className="w-full mt-1 px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-          />
-        </div>
+        <InputField
+          label="Full Name"
+          name="name"
+          value={form.name}
+          onChange={handleChange}
+          placeholder="Enter full name"
+          required
+        />
 
         {/* Email */}
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">Email Address</label>
-          <input
-            type="email"
-            name="email"
-            value={form.email}
-            onChange={handleChange}
-            required
-            placeholder="Enter email"
-            className="w-full mt-1 px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-          />
-        </div>
+        <InputField
+          label="Email Address"
+          name="email"
+          type="email"
+          value={form.email}
+          onChange={handleChange}
+          placeholder="Enter email"
+          required
+        />
 
         {/* Phone */}
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">Phone Number</label>
-          <input
-            type="tel"
-            name="phone"
-            value={form.phone}
-            onChange={handleChange}
-            required
-            placeholder="Enter phone number"
-            className="w-full mt-1 px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-          />
-        </div>
+        <InputField
+          label="Phone Number"
+          name="phone"
+          type="tel"
+          value={form.phone}
+          onChange={handleChange}
+          placeholder="Enter phone number"
+          required
+        />
 
         {/* Role */}
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">User Role / Position</label>
-          <select
-            name="role"
-            value={form.role}
-            onChange={handleChange}
-            required
-            className="w-full mt-1 px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-          >
-            <option value="">Select a role</option>
-            <option value="admin">Admin</option>
-            <option value="chief">Chief Librarian</option>
-            <option value="regional">Regional Librarian</option>
-            <option value="regional">Departmental Head</option>
-            <option value="branch">Branch Librarian</option>
-          </select>
-        </div>
+        <SelectField
+          label="User Role / Position"
+          name="role"
+          value={form.role}
+          onChange={handleChange}
+          options={[
+            "Admin/HR",
+            "Chief Librarian",
+            "Deputy Chief Librarian",
+            "Principal Librarian",
+            "Branch Librarian",
+            "Staff",
+          ]}
+          required
+        />
 
         {/* Branch */}
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">Branch / Department</label>
-          <select
-            name="branch"
-            value={form.branch}
-            onChange={handleChange}
-            required
-            className="w-full mt-1 px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-          >
-            <option value="">Select Branch or Department</option>
-            <option value="HQ">HQ</option>
-            <option value="HQ">Cataloguing Department HQ</option>
-            <option value="HQ">Reference Department HQ</option>
-            <option value="HQ">Adult Lending Department HQ</option>
-            <option value="HQ">Children Department HQ</option>
-            <option value="Bo Regional">Regional Library South </option>
-            <option value="Bo City">City Library Bo</option>
-            <option value="Kenema Regional">Regional Library East</option>
-            <option value="Kenema city">City Library Kenema</option>
-            <option value="Makeni Regional">Regional Library North</option>
-            <option value="Makeni city">City Library Makeni</option>
-            <option value="Eastern Region">Kailahun District Library</option>
-            <option value="Eastern Region">Koidu District Library</option>
-            <option value="Eastern Region">Segbuma Branch Library</option>
-            <option value="Western Area">Western Area</option>
-            <option value="Makeni Division">Makeni Division</option>
-          </select>
-        </div>
+        <SelectField
+          label="Branch / Department"
+          name="branch"
+          value={form.branch}
+          onChange={handleChange}
+          options={[
+            "HQ - Cataloguing Department",
+            "HQ - Reference Department",
+            "HQ - Adult Lending Department",
+            "HQ - Children Department",
+            "Regional Library South (Bo)",
+            "Regional Library East (Kenema)",
+            "Regional Library North (Makeni)",
+            "City Library Bo",
+            "City Library Kenema",
+            "City Library Makeni",
+            "Kailahun District Library",
+            "Koidu District Library",
+            "Segbuma Branch Library",
+          ]}
+          required
+        />
 
         {/* Password */}
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">Password</label>
-          <input
-            type="password"
-            name="password"
-            value={form.password}
-            onChange={handleChange}
-            required
-            placeholder="Enter password"
-            className="w-full mt-1 px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-          />
-        </div>
+        <InputField
+          label="Password"
+          name="password"
+          type="password"
+          value={form.password}
+          onChange={handleChange}
+          placeholder="Enter password"
+          required
+        />
 
         {/* Confirm Password */}
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">Confirm Password</label>
-          <input
-            type="password"
-            name="confirmPassword"
-            value={form.confirmPassword}
-            onChange={handleChange}
-            required
-            placeholder="Re-enter password"
-            className="w-full mt-1 px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-          />
-        </div>
+        <InputField
+          label="Confirm Password"
+          name="confirmPassword"
+          type="password"
+          value={form.confirmPassword}
+          onChange={handleChange}
+          placeholder="Re-enter password"
+          required
+        />
 
         {/* Account Status */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Account Status</label>
+          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+            Account Status
+          </label>
           <div className="flex gap-4 items-center">
-            <label className="flex items-center gap-1 text-sm text-gray-700 dark:text-gray-300">
-              <input
-                type="radio"
-                name="status"
-                value="active"
-                checked={form.status === 'active'}
-                onChange={handleChange}
-              />
-              Active
-            </label>
-            <label className="flex items-center gap-1 text-sm text-gray-700 dark:text-gray-300">
-              <input
-                type="radio"
-                name="status"
-                value="inactive"
-                checked={form.status === 'inactive'}
-                onChange={handleChange}
-              />
-              Inactive
-            </label>
+            {["active", "inactive"].map((status) => (
+              <label
+                key={status}
+                className="flex items-center gap-1 text-sm text-gray-700 dark:text-gray-300"
+              >
+                <input
+                  type="radio"
+                  name="status"
+                  value={status}
+                  checked={form.status === status}
+                  onChange={handleChange}
+                />
+                {status.charAt(0).toUpperCase() + status.slice(1)}
+              </label>
+            ))}
           </div>
         </div>
 
-        {/* Action Buttons */}
+        {/* Buttons */}
         <div className="flex gap-4 mt-6">
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700"
+            disabled={isPending}
+            className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 disabled:opacity-60"
           >
-            Create User
+            {isPending ? "Creating..." : "Create User"}
           </button>
           <button
             type="button"
@@ -245,3 +244,63 @@ const CreateUser = () => {
 };
 
 export default CreateUser;
+
+// ============================================================
+// 🧩 Reusable Components
+// ============================================================
+
+// ✅ Text Input
+const InputField = ({
+  label,
+  name,
+  type = "text",
+  value,
+  onChange,
+  placeholder,
+  required = false,
+}) => (
+  <div>
+    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+      {label}
+    </label>
+    <input
+      type={type}
+      name={name}
+      value={value}
+      onChange={onChange}
+      required={required}
+      placeholder={placeholder}
+      className="w-full mt-1 px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+    />
+  </div>
+);
+
+// ✅ Select Input
+const SelectField = ({
+  label,
+  name,
+  value,
+  onChange,
+  options,
+  required = false,
+}) => (
+  <div>
+    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+      {label}
+    </label>
+    <select
+      name={name}
+      value={value}
+      onChange={onChange}
+      required={required}
+      className="w-full mt-1 px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+    >
+      <option value="">Select an option</option>
+      {options.map((opt, idx) => (
+        <option key={idx} value={opt}>
+          {opt}
+        </option>
+      ))}
+    </select>
+  </div>
+);
