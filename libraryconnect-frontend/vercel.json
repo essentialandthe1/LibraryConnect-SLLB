@@ -15,5 +15,5 @@
       "dest": "/build/$1"
     }
   ],
-  "installCommand": "npm install --force"
+  "installCommand": "npm ci"
 }
