@@ -22,7 +22,7 @@ const AdminLayout = () => {
       {/* Main content */}
       <div
         className={`flex-1 flex flex-col bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-white transition-all duration-300 ${
-          collapsed ? "ml-20" : "ml-64"
+          collapsed ? "md:ml-20" : "md:ml-64"
         }`}
       >
         <Topbar
