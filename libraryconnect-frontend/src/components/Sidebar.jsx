@@ -50,9 +50,10 @@ const Sidebar = ({ isOpen, toggleSidebar, collapsed, setCollapsed }) => {
 
       {/* Sidebar */}
       <div
-        className={`fixed top-0 left-0 h-screen bg-blue-700 text-white z-50 transform transition-all duration-300 flex flex-col
+        className={`fixed top-0 left-0 h-screen bg-blue-700 text-white z-40 transform transition-all duration-300 flex flex-col
         ${isOpen ? "translate-x-0" : "-translate-x-full"} 
-        ${collapsed ? "w-20" : "w-64"} md:translate-x-0`}
+        ${collapsed ? "w-20" : "w-64"} 
+        md:translate-x-0 md:z-30`}
       >
         {/* Header with collapse toggle */}
         <div className="flex items-center justify-between p-4 border-b border-blue-500">
@@ -82,7 +83,11 @@ const Sidebar = ({ isOpen, toggleSidebar, collapsed, setCollapsed }) => {
           <nav className="p-4 space-y-2">
             <NavLink
               to={`/${adminRoles.includes(user.role) ? "admin" : "user"}-dashboard`}
-              onClick={toggleSidebar}
+              onClick={() => {
+                if (window.innerWidth < 768) {
+                  toggleSidebar();
+                }
+              }}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2 rounded-md hover:bg-blue-600 ${isActive ? "bg-blue-600" : ""}`
               }
@@ -105,10 +110,18 @@ const Sidebar = ({ isOpen, toggleSidebar, collapsed, setCollapsed }) => {
 
                 {userMgmtOpen && !collapsed && (
                   <div className="ml-8 mt-1 space-y-1">
-                    <NavLink to="/create-user" onClick={toggleSidebar} className="flex items-center gap-2 px-2 py-1 hover:bg-blue-600 rounded">
+                    <NavLink 
+                      to="/create-user" 
+                      onClick={() => window.innerWidth < 768 && toggleSidebar()} 
+                      className="flex items-center gap-2 px-2 py-1 hover:bg-blue-600 rounded"
+                    >
                       <UserPlus size={16} /> Create User
                     </NavLink>
-                    <NavLink to="/manage-users" onClick={toggleSidebar} className="flex items-center gap-2 px-2 py-1 hover:bg-blue-600 rounded">
+                    <NavLink 
+                      to="/manage-users" 
+                      onClick={() => window.innerWidth < 768 && toggleSidebar()} 
+                      className="flex items-center gap-2 px-2 py-1 hover:bg-blue-600 rounded"
+                    >
                       <Users size={16} /> Manage Users
                     </NavLink>
                   </div>
@@ -116,33 +129,43 @@ const Sidebar = ({ isOpen, toggleSidebar, collapsed, setCollapsed }) => {
               </div>
             )}
 
-            <NavLink to="/upload" onClick={toggleSidebar} className="flex items-center gap-3 px-3 py-2 hover:bg-blue-600 rounded">
-              <Upload size={18} /> {!collapsed && "Upload Document"}
-            </NavLink>
-            <NavLink to="/inbox" onClick={toggleSidebar} className="flex items-center gap-3 px-3 py-2 hover:bg-blue-600 rounded">
-              <Inbox size={18} /> {!collapsed && "Inbox"}
-            </NavLink>
-            <NavLink to="/folders" onClick={toggleSidebar} className="flex items-center gap-3 px-3 py-2 hover:bg-blue-600 rounded">
-              <Folder size={18} /> {!collapsed && "Folders"}
-            </NavLink>
-            <NavLink to="/notifications" onClick={toggleSidebar} className="flex items-center gap-3 px-3 py-2 hover:bg-blue-600 rounded">
-              <Bell size={18} />
-              {!collapsed && (
-                <span className="flex items-center gap-2">
-                  Notifications
-                  {unreadCount > 0 && (
-                    <span className="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">
-                      {unreadCount}
-                    </span>
-                  )}
-                </span>
-              )}
-            </NavLink>
-            <NavLink to="/settings" onClick={toggleSidebar} className="flex items-center gap-3 px-3 py-2 hover:bg-blue-600 rounded">
-              <Settings size={18} /> {!collapsed && "Settings"}
-            </NavLink>
+            {[
+              { to: "/upload", icon: Upload, text: "Upload Document" },
+              { to: "/inbox", icon: Inbox, text: "Inbox" },
+              { to: "/folders", icon: Folder, text: "Folders" },
+              { to: "/notifications", icon: Bell, text: "Notifications", badge: unreadCount },
+              { to: "/settings", icon: Settings, text: "Settings" },
+            ].map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                onClick={() => window.innerWidth < 768 && toggleSidebar()}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-3 py-2 rounded-md hover:bg-blue-600 ${isActive ? "bg-blue-600" : ""}`
+                }
+              >
+                <item.icon size={18} />
+                {!collapsed && (
+                  <span className="flex items-center gap-2">
+                    {item.text}
+                    {item.badge > 0 && (
+                      <span className="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+                        {item.badge}
+                      </span>
+                    )}
+                  </span>
+                )}
+              </NavLink>
+            ))}
+
             {adminRoles.includes(user.role) && (
-              <NavLink to="/trash" onClick={toggleSidebar} className="flex items-center gap-3 px-3 py-2 hover:bg-blue-600 rounded">
+              <NavLink
+                to="/trash"
+                onClick={() => window.innerWidth < 768 && toggleSidebar()}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-3 py-2 rounded-md hover:bg-blue-600 ${isActive ? "bg-blue-600" : ""}`
+                }
+              >
                 <Trash2 size={18} /> {!collapsed && "Trash"}
               </NavLink>
             )}
