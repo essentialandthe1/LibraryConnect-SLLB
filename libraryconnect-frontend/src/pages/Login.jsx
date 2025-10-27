@@ -31,7 +31,7 @@ const Login = () => {
   // 🧠 Form states
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [remember, setRemember] = useState(false);
+  const [remember, setRemember] = useState(false); 
 
   // 🖼️ Background slideshow
   const images = [bg1, bg2];
