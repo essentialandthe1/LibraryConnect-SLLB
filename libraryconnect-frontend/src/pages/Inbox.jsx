@@ -99,7 +99,7 @@ const Inbox = () => {
   return (
     <div className="bg-white dark:bg-gray-800 p-6 rounded-md shadow">
       {/* Toggle buttons */}
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex flex-col sm:flex-row justify-between items-left sm:items-center mb-4 gap-2">
         <h2 className="text-xl font-bold text-gray-800 dark:text-white">
           {activeTab === "inbox" ? "📥 Inbox" : "📤 Outbox"}
         </h2>
@@ -107,7 +107,7 @@ const Inbox = () => {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setActiveTab("inbox")}
-            className={`px-3 py-1 rounded ${
+            className={`w-full px-3 py-1 rounded ${
               activeTab === "inbox"
                 ? "bg-blue-600 text-white"
                 : "bg-gray-200 dark:bg-gray-700 dark:text-white"
@@ -117,7 +117,7 @@ const Inbox = () => {
           </button>
           <button
             onClick={() => setActiveTab("outbox")}
-            className={`px-3 py-1 rounded ${
+            className={`w-full px-3 py-1 rounded ${
               activeTab === "outbox"
                 ? "bg-blue-600 text-white"
                 : "bg-gray-200 dark:bg-gray-700 dark:text-white"
@@ -129,7 +129,7 @@ const Inbox = () => {
       </div>
 
       {/* Search bar */}
-      <div className="relative w-64 mb-4">
+      <div className="relative sm:w-64 mb-4">
         <Search size={16} className="absolute left-3 top-2.5 text-gray-400" />
         <input
           type="text"
