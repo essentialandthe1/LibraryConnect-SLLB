@@ -1,21 +1,18 @@
 // src/pages/AdminDashboard.jsx
 // ------------------------------------------------------
 // 📊 ADMIN DASHBOARD
-// Powered by: Axios + TanStack Query
-// Handles: Users, Documents, Logs, Analytics
+// Reusable components: Card, Table, SectionWithSearch
 // ------------------------------------------------------
 
 import React, { useState } from "react";
-import {
-  Users,
-  FileText,
-  FolderPlus,
-  Search,
-} from "lucide-react";
+import { Users, FileText, FolderPlus, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../services/api";
+
+// ✅ Import reusable Table component
+import Table from "../components/ui/Table";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -44,7 +41,7 @@ const AdminDashboard = () => {
     queryFn: async () => (await api.get("/audit-logs")).data,
   });
 
-  // 📊 Example Analytics (to replace with backend later)
+  // 📊 Example Analytics
   const analytics = [
     { month: "Jan", uploads: 12 },
     { month: "Feb", uploads: 18 },
@@ -73,7 +70,7 @@ const AdminDashboard = () => {
 
   const paginatedUsers = paginate(filteredUsers, userPage, userPageSize);
 
-  // 📦 Export Logs (frontend logic only)
+  // 📦 Export Logs
   const exportLogs = () => {
     const csv = [
       ["User", "Action", "Target", "Date"],
@@ -89,11 +86,11 @@ const AdminDashboard = () => {
   };
 
   if (usersLoading || docsLoading || logsLoading)
-    return <div className="text-center py-10">Loading dashboard data...</div>;
+    return <div className="text-center py-10 text-gray-700 dark:text-gray-200">Loading dashboard data...</div>;
 
   return (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold">Welcome Back, Admin 👋</h2>
+    <div className="space-y-6 p-6">
+      <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Welcome Back, Admin 👋</h2>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -103,12 +100,12 @@ const AdminDashboard = () => {
       </div>
 
       {/* Upload Analytics */}
-      <div className="bg-white p-4 rounded shadow">
-        <h3 className="font-semibold mb-3">📊 Uploads Analytics</h3>
+      <div className="bg-white dark:bg-gray-800 p-4 rounded shadow">
+        <h3 className="font-semibold mb-3 text-gray-800 dark:text-gray-100">📊 Uploads Analytics</h3>
         <ResponsiveContainer width="100%" height={250}>
           <BarChart data={analytics}>
-            <XAxis dataKey="month" />
-            <YAxis />
+            <XAxis dataKey="month" stroke="#4B5563" />
+            <YAxis stroke="#4B5563" />
             <Tooltip />
             <Bar dataKey="uploads" fill="#3b82f6" />
           </BarChart>
@@ -163,13 +160,13 @@ const SectionWithSearch = ({
   data,
   paginationProps,
 }) => (
-  <div className="bg-white p-4 rounded shadow">
+  <div className="bg-white dark:bg-gray-800 p-4 rounded shadow">
     <div className="flex justify-between items-center mb-3">
-      <h3 className="font-semibold">{title}</h3>
+      <h3 className="font-semibold text-gray-800 dark:text-gray-100">{title}</h3>
       {buttonLabel && (
         <button
           onClick={onButtonClick}
-          className="bg-blue-600 text-white px-3 py-2 rounded"
+          className="bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 transition"
         >
           {buttonLabel}
         </button>
@@ -177,34 +174,17 @@ const SectionWithSearch = ({
     </div>
 
     <div className="relative w-64 mb-3">
-      <Search size={16} className="absolute left-3 top-2.5 text-gray-400" />
+      <Search size={16} className="absolute left-3 top-2.5 text-gray-400 dark:text-gray-300" />
       <input
         type="text"
         placeholder={placeholder}
         value={searchValue}
         onChange={(e) => onSearch(e.target.value)}
-        className="pl-9 pr-3 py-2 border rounded w-full"
+        className="pl-9 pr-3 py-2 border rounded w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white"
       />
     </div>
 
-    <table className="w-full text-sm">
-      <thead className="bg-blue-600 text-white">
-        <tr>
-          {columns.map((col) => (
-            <th key={col} className="p-2 text-start">{col}</th>
-          ))}
-        </tr>
-      </thead>
-      <tbody>
-        {data.map((row, idx) => (
-          <tr key={idx} className="border-b">
-            {row.map((cell, i) => (
-              <td key={i} className="p-2">{cell}</td>
-            ))}
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <Table columns={columns} data={data} />
 
     {paginationProps && <PaginationControls {...paginationProps} />}
   </div>
@@ -218,13 +198,15 @@ const PaginationControls = ({
   onPageChange,
   onPageSizeChange,
 }) => (
-  <div className="flex justify-between items-center mt-3 text-sm">
-    <span>Page {currentPage} of {totalPages} ({totalItems} total)</span>
+  <div className="flex justify-between items-center mt-3 text-sm text-gray-700 dark:text-gray-200">
+    <span>
+      Page {currentPage} of {totalPages} ({totalItems} total)
+    </span>
     <div className="flex gap-3 items-center">
       <select
         value={pageSize}
         onChange={(e) => onPageSizeChange(parseInt(e.target.value))}
-        className="border rounded px-2 py-1"
+        className="border rounded px-2 py-1 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
       >
         <option value={5}>5</option>
         <option value={10}>10</option>
@@ -234,14 +216,14 @@ const PaginationControls = ({
         <button
           onClick={() => onPageChange(Math.max(currentPage - 1, 1))}
           disabled={currentPage === 1}
-          className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+          className="px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded disabled:opacity-50"
         >
           Prev
         </button>
         <button
           onClick={() => onPageChange(Math.min(currentPage + 1, totalPages))}
           disabled={currentPage === totalPages}
-          className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+          className="px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded disabled:opacity-50"
         >
           Next
         </button>
@@ -251,9 +233,9 @@ const PaginationControls = ({
 );
 
 const Card = ({ title, value, icon, color }) => (
-  <div className={`p-4 rounded-md shadow bg-${color}-100 text-${color}-800`}>
+  <div className={`p-4 rounded-md shadow bg-${color}-100 dark:bg-${color}-600 text-${color}-800 dark:text-white transition`}>
     <div className="flex justify-between items-center">
-      <p>{title}</p>
+      <p className="font-semibold">{title}</p>
       {icon}
     </div>
     <h3 className="text-xl font-bold mt-2">{value}</h3>

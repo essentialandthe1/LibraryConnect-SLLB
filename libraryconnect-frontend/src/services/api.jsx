@@ -1,24 +1,26 @@
 // src/services/api.js
-// --------------------------------------------------
-// 🧩 Axios + TanStack Query Setup
-// Handles base URL, token injection, and global error management
-
 import axios from "axios";
 import { QueryClient } from "@tanstack/react-query";
 
 // ✅ Create a reusable Axios instance
 export const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || "http://localhost:5000/api", // Change this to match your backend
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000/api", // assign directly, no 'const'
   headers: {
     "Content-Type": "application/json",
   },
+  withCredentials: true, // optional if you need cookies
 });
 
 // ✅ Request interceptor: attach auth token
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
-    if (token) config.headers.Authorization = `Bearer ${token}`;
+    if (token) {
+      config.headers = {
+        ...config.headers,
+        Authorization: `Bearer ${token}`,
+      };
+    }
     return config;
   },
   (error) => Promise.reject(error)
