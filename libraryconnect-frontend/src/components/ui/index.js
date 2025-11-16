@@ -1,5 +1,5 @@
 // Re-export all UI components for easy import
-export { Avatar, AvatarImage, AvatarFallback } from "./Avatar";
+export { Avatar, AvatarImage, AvatarFallback } from "./avatar_temp";
 export { default as Button } from "./Button";
 export { default as Card } from "./Card";
 export * from "./DropdownMenu";
