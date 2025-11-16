@@ -12,7 +12,7 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "../services/api";
 
 // ✅ Import reusable Table component
-import Table from "../components/ui/Table";
+import { Table } from "../components/ui/table.jsx";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();

@@ -1,15 +1,22 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Sun, Moon, Eye, EyeOff } from "lucide-react";
 import toast from "react-hot-toast";
 import logo from "../assets/logo.png";
 
 // Reusable UI components
-import { Button, Input, Card, Label } from "../components/ui";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 
 // Background images
 import bg1 from "../assets/login-bg1.jpg";
 import bg2 from "../assets/login-bg2.jpg";
+
+// Auth & Theme Context
+import { useAuthContext } from "@/context/AuthContext";
+import { useTheme } from "@/context/ThemeContext";
 
 // Toggle backend mode
 const USE_BACKEND = false;
@@ -22,18 +29,11 @@ const mockUsers = [
   { email: "user@sllb.sl", password: "user123", role: "User" },
 ];
 
-// Label Component
-const FormLabel = ({ children, htmlFor }) => (
-  <label htmlFor={htmlFor} className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
-    {children}
-  </label>
-);
-
 // Background slideshow component
 const BackgroundSlideshow = ({ images }) => {
   const [current, setCurrent] = useState(0);
 
-  useEffect(() => {
+  React.useEffect(() => {
     const interval = setInterval(() => setCurrent((prev) => (prev + 1) % images.length), 5000);
     return () => clearInterval(interval);
   }, [images.length]);
@@ -49,7 +49,6 @@ const BackgroundSlideshow = ({ images }) => {
           style={{ backgroundImage: `url(${img})` }}
         />
       ))}
-
       <div className="absolute inset-0 bg-blue-900 bg-opacity-20 flex flex-col justify-end p-10 text-white rounded-tr-3xl z-10">
         <h1 className="text-2xl font-bold mb-2">LibraryConnect</h1>
         <p className="max-w-md text-sm">
@@ -63,18 +62,14 @@ const BackgroundSlideshow = ({ images }) => {
 
 const Login = () => {
   const navigate = useNavigate();
+  const { setUser } = useAuthContext();
+  const { theme, toggleTheme } = useTheme();
 
-  const [theme, setTheme] = useState("light");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
-
-  const toggleTheme = () => {
-    document.documentElement.classList.toggle("dark");
-    setTheme((prev) => (prev === "light" ? "dark" : "light"));
-  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -111,10 +106,14 @@ const Login = () => {
         userData = foundUser;
       }
 
+      // Save user info
       const storage = remember ? localStorage : sessionStorage;
       storage.setItem("userInfo", JSON.stringify(userData));
+      setUser(userData);
+
       toast.success(`✅ Welcome, ${userData.email}`);
 
+      // Navigate to appropriate dashboard
       const adminRoles = ["Admin/HR", "Chief Librarian", "Deputy Chief Librarian", "Principal Librarian"];
       navigate(adminRoles.includes(userData.role) ? "/admin-dashboard" : "/user-dashboard");
     } catch (err) {
@@ -174,7 +173,7 @@ const Login = () => {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3 text-gray-500 dark:text-gray-300 "
+                  className="absolute right-3 top-3 text-gray-500 dark:text-gray-300"
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
@@ -193,14 +192,9 @@ const Login = () => {
               </label>
             </div>
 
-            <Button
-              type="submit"
-              loading={loading}
-              className="w-full mt-2"
-            >
+            <Button type="submit" loading={loading} className="w-full mt-2">
               Log In
             </Button>
-
 
             <p className="text-center text-xs text-gray-500 dark:text-gray-400 mt-2">
               Need help? Contact your HQ Administrator.
