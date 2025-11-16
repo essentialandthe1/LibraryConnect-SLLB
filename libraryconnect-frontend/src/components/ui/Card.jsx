@@ -1,13 +1,11 @@
-import React, { forwardRef } from "react";
+import React from "react";
 
-const Card = forwardRef(({ children, className = "", ...props }, ref) => (
-  <div
-    ref={ref}
-    className={`bg-gray-50 dark:bg-gray-800 p-6 rounded-xl shadow-md ${className}`}
-    {...props}
-  >
-    {children}
-  </div>
-));
+const Card = ({ className = "", children }) => {
+  return (
+    <div className={`p-4 bg-white rounded-lg shadow ${className}`}>
+      {children}
+    </div>
+  );
+};
 
 export default Card;
