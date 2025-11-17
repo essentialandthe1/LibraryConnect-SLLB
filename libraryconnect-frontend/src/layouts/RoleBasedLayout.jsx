@@ -1,9 +1,11 @@
-// src/layouts/RoleBasedLayout.jsx
+import React from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import AdminLayout from "./AdminLayout";
 import UserLayout from "./UserLayout";
 import AdminDashboard from "../pages/AdminDashboard";
 import UserDashboard from "../pages/UserDashboard";
+import { useTheme } from "@/context/ThemeContext";
+import AppLayout from "./AppLayout"; // ✅ Global theme wrapper
 
 const RoleBasedLayout = () => {
   // 👤 Get current user (local/sessionStorage)
@@ -12,6 +14,7 @@ const RoleBasedLayout = () => {
     JSON.parse(sessionStorage.getItem("userInfo"));
 
   const location = useLocation();
+  const { theme } = useTheme(); // 🌙 global theme
 
   // 🚪 Redirect to login if no user
   if (!user) return <Navigate to="/" replace />;
@@ -31,10 +34,14 @@ const RoleBasedLayout = () => {
   const Dashboard = isAdmin ? <AdminDashboard /> : <UserDashboard />;
 
   return (
-    <Layout>
-      {/* If path is /dashboard → load correct dashboard */}
-      {location.pathname === "/dashboard" ? Dashboard : <Outlet />}
-    </Layout>
+    <AppLayout>
+      <div className="flex flex-col min-h-screen">
+        <Layout>
+          {/* Load dashboard on /dashboard path, otherwise render child routes */}
+          {location.pathname === "/dashboard" ? Dashboard : <Outlet />}
+        </Layout>
+      </div>
+    </AppLayout>
   );
 };
 
