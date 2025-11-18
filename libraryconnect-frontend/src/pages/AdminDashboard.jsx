@@ -7,7 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "../services/api";
 
 // Reusable components
-import { Table } from "../components/ui/table.jsx";
+import { Table } from "../components/ui/Table.jsx";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 

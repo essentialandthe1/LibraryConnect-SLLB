@@ -48,7 +48,9 @@ const Topbar = ({ toggleSidebar }) => {
     <div
       className={clsx(
         "px-4 py-3 shadow-sm flex justify-between items-center sticky top-0 z-50 transition-colors",
-        "bg-background text-foreground dark:bg-gray-900 dark:text-gray-100"
+        "bg-background text-foreground",
+        "border-b border-border dark:border-white/20", // ⬅ NEW CLEAN BORDER
+        "dark:bg-[#0D0D0D] dark:text-gray-100"
       )}
     >
       <div className="flex items-center gap-3">
@@ -71,7 +73,7 @@ const Topbar = ({ toggleSidebar }) => {
             )}
           </button>
           {showNotifications && (
-            <div className="absolute right-0 mt-2 w-60 bg-card dark:bg-gray-800 rounded-md shadow-lg z-50 p-2 text-sm transition-colors">
+            <div className="absolute right-0 mt-2 w-60 bg-card dark:bg-gray-800 rounded-md shadow-lg z-50 p-2 text-sm transition-colors border border-border dark:border-white/10">
               {notifications.map((note) => (
                 <div key={note.id} className="py-1 px-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
                   {note.message}
@@ -92,7 +94,7 @@ const Topbar = ({ toggleSidebar }) => {
           </button>
 
           {showProfileMenu && (
-            <div className="absolute right-0 mt-2 w-56 bg-card dark:bg-gray-800 rounded-md shadow-lg z-50 p-2 text-sm transition-colors">
+            <div className="absolute right-0 mt-2 w-60 bg-card dark:bg-gray-800 rounded-md shadow-lg z-50 p-2 text-sm transition-colors border border-border dark:border-white/10">
               <div className="px-2 py-2 border-b dark:border-gray-600">
                 <p className="font-medium">{user.email}</p>
                 <p className="text-xs text-muted-foreground dark:text-gray-400 capitalize">{user.role}</p>

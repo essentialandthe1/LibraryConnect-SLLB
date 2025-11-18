@@ -60,11 +60,11 @@ const Sidebar = ({ isOpen, toggleSidebar, collapsed, setCollapsed }) => {
           collapsed ? "w-20" : "w-64",
           isOpen ? "translate-x-0" : "-translate-x-full",
           "md:translate-x-0 md:z-30 shadow-md",
-          "bg-sidebar text-sidebar-foreground dark:bg-gray-900 dark:text-gray-100"
+          "bg-sidebar text-sidebar-foreground dark:bg-[#0D0D0D] dark:text-gray-100"
         )}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-border dark:border-gray-700">
+        <div className="flex items-center justify-between p-4 border-b border-border dark:border-white/20">
           {!collapsed && <h1 className="text-lg font-bold text-foreground dark:text-gray-100">LibraryConnect</h1>}
           <button
             onClick={() => setCollapsed(!collapsed)}
@@ -83,7 +83,8 @@ const Sidebar = ({ isOpen, toggleSidebar, collapsed, setCollapsed }) => {
         {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto">
           {!collapsed && (
-            <div className="px-4 py-4 border-b border-border dark:border-gray-700">
+            <div className="px-4 py-4 border-b border-border dark:border-white/20
+">
               <div className="bg-card dark:bg-gray-800 p-3 rounded text-sm shadow-sm transition-shadow hover:shadow-md">
                 <p className="font-semibold truncate text-foreground dark:text-gray-100">{user.email}</p>
                 <p className="text-muted-foreground dark:text-gray-400 text-xs capitalize">{user.role}</p>
@@ -189,7 +190,7 @@ const Sidebar = ({ isOpen, toggleSidebar, collapsed, setCollapsed }) => {
           </nav>
         </div>
 
-        <div className="p-4 border-t border-border dark:border-gray-700">
+        <div className="p-4 border-t border-border dark:border-white/20">
           <button
             onClick={handleLogout}
             className="flex items-center gap-2 text-sm text-destructive hover:text-red-600 dark:hover:text-red-400 transition-colors"
