@@ -4,7 +4,7 @@ module.exports = {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
-  darkMode: ['class', "class"], // enable dark mode via 'class'
+  darkMode: "class", // enable dark mode via 'class'
   theme: {
   	extend: {
   		borderRadius: {

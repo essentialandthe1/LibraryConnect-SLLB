@@ -1,39 +1,36 @@
+// src/components/Topbar.jsx
 import React, { useState, useRef, useEffect } from "react";
 import { Bell, LogOut, Settings } from "lucide-react";
 import logo from "../assets/logo.png";
 import { useNavigate } from "react-router-dom";
+import { useTheme } from "@/contexts/ThemeContext";
+import clsx from "clsx";
 
 const Topbar = ({ toggleSidebar }) => {
   const navigate = useNavigate();
+  const { theme } = useTheme();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   const notificationsRef = useRef(null);
   const profileRef = useRef(null);
 
-  // 📨 Mock notifications (replace with backend API later)
-  const notifications = [
+  const notifications = JSON.parse(localStorage.getItem("notifications")) || [
     { id: 1, message: "New document from HQ" },
     { id: 2, message: "Finance report uploaded" },
     { id: 3, message: "Bo Region submitted memo" },
   ];
 
-  // 👤 Get logged in user
   const user =
     JSON.parse(localStorage.getItem("userInfo")) ||
-    JSON.parse(sessionStorage.getItem("userInfo")) || {
-      email: "guest@sllb.sl",
-      role: "Guest",
-    };
+    JSON.parse(sessionStorage.getItem("userInfo")) || { email: "guest@sllb.sl", role: "Guest" };
 
-  // 🚪 Logout
   const handleLogout = () => {
     localStorage.removeItem("userInfo");
     sessionStorage.removeItem("userInfo");
     navigate("/");
   };
 
-  // 👇 Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (notificationsRef.current && !notificationsRef.current.contains(event.target)) {
@@ -43,75 +40,72 @@ const Topbar = ({ toggleSidebar }) => {
         setShowProfileMenu(false);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   return (
-    <div className="bg-white dark:bg-gray-800 px-4 py-3 shadow-sm flex justify-between items-center sticky top-0 z-50">
-      {/* Left side: logo only */}
+    <div
+      className={clsx(
+        "px-4 py-3 shadow-sm flex justify-between items-center sticky top-0 z-50 transition-colors",
+        "bg-background text-foreground dark:bg-gray-900 dark:text-gray-100"
+      )}
+    >
       <div className="flex items-center gap-3">
         <img src={logo} alt="SLLB Logo" className="w-6 h-6 md:w-8 md:h-8" />
-        <span className="font-bold text-blue-600 dark:text-blue-300 text-base md:text-lg">
-          SLLB
-        </span>
+        <span className="font-bold text-blue-600 dark:text-blue-400 text-base md:text-lg">SLLB</span>
       </div>
 
-      {/* Right side */}
       <div className="relative flex items-center gap-6 pr-2">
-        {/* 🔔 Notifications */}
+        {/* Notifications */}
         <div className="relative hidden md:block" ref={notificationsRef}>
           <button
             onClick={() => setShowNotifications(!showNotifications)}
             className="relative text-gray-600 dark:text-gray-300 hover:text-blue-600"
           >
             <Bell size={20} />
-            <span className="absolute -top-1 -right-2 bg-red-500 text-white text-xs rounded-full px-1">
-              {notifications.length}
-            </span>
+            {notifications.length > 0 && (
+              <span className="absolute -top-1 -right-2 bg-red-500 text-white text-xs rounded-full px-1">
+                {notifications.length}
+              </span>
+            )}
           </button>
           {showNotifications && (
-            <div className="absolute right-0 mt-2 w-60 bg-white dark:bg-gray-700 rounded-md shadow-lg z-50 p-2 text-sm">
+            <div className="absolute right-0 mt-2 w-60 bg-card dark:bg-gray-800 rounded-md shadow-lg z-50 p-2 text-sm transition-colors">
               {notifications.map((note) => (
-                <div
-                  key={note.id}
-                  className="py-1 px-2 hover:bg-gray-100 dark:hover:bg-gray-600 rounded"
-                >
+                <div key={note.id} className="py-1 px-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
                   {note.message}
                 </div>
               ))}
-              <div className="mt-2 text-center text-xs text-gray-400">View All</div>
+              <div className="mt-2 text-center text-xs text-muted-foreground dark:text-gray-400">View All</div>
             </div>
           )}
         </div>
 
-        {/* 👤 Profile */}
+        {/* Profile */}
         <div className="relative hidden md:block" ref={profileRef}>
           <button
             onClick={() => setShowProfileMenu(!showProfileMenu)}
-            className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:ring-2 hover:ring-blue-500"
+            className="flex items-center justify-center w-8 h-8 rounded-full bg-input dark:bg-gray-700 text-foreground dark:text-gray-300 hover:ring-2 hover:ring-blue-500 transition-colors"
           >
             {user.email ? user.email.charAt(0).toUpperCase() : "U"}
           </button>
 
           {showProfileMenu && (
-            <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-700 rounded-md shadow-lg z-50 p-2 text-sm">
+            <div className="absolute right-0 mt-2 w-56 bg-card dark:bg-gray-800 rounded-md shadow-lg z-50 p-2 text-sm transition-colors">
               <div className="px-2 py-2 border-b dark:border-gray-600">
                 <p className="font-medium">{user.email}</p>
-                <p className="text-xs text-gray-500 capitalize">{user.role}</p>
+                <p className="text-xs text-muted-foreground dark:text-gray-400 capitalize">{user.role}</p>
               </div>
-
               <button
                 onClick={() => navigate("/settings")}
-                className="w-full flex items-center gap-2 px-2 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 rounded"
+                className="w-full flex items-center gap-2 px-2 py-2 text-foreground dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
               >
                 <Settings size={16} /> Settings
               </button>
-
               <button
                 onClick={handleLogout}
-                className="w-full flex items-center gap-2 px-2 py-2 text-red-600 hover:bg-red-100 dark:hover:bg-gray-600 rounded"
+                className="w-full flex items-center gap-2 px-2 py-2 text-destructive hover:bg-red-100 dark:hover:bg-gray-700 rounded transition-colors"
               >
                 <LogOut size={16} /> Logout
               </button>
@@ -119,11 +113,8 @@ const Topbar = ({ toggleSidebar }) => {
           )}
         </div>
 
-        {/* ☰ Mobile sidebar toggle */}
-        <button
-          onClick={toggleSidebar}
-          className="inline-block md:hidden text-gray-700 dark:text-gray-300"
-        >
+        {/* Mobile toggle */}
+        <button onClick={toggleSidebar} className="inline-block md:hidden text-foreground dark:text-gray-300">
           ☰
         </button>
       </div>

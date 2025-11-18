@@ -4,7 +4,7 @@ import AdminLayout from "./AdminLayout";
 import UserLayout from "./UserLayout";
 import AdminDashboard from "../pages/AdminDashboard";
 import UserDashboard from "../pages/UserDashboard";
-import { useTheme } from "@/context/ThemeContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import AppLayout from "./AppLayout"; // ✅ Global theme wrapper
 
 const RoleBasedLayout = () => {

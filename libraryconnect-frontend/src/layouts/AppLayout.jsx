@@ -1,6 +1,6 @@
 // src/layouts/AppLayout.jsx
 import React from "react";
-import { useTheme } from "@/context/ThemeContext";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const AppLayout = ({ children }) => {
   const { theme } = useTheme(); // gets the global theme

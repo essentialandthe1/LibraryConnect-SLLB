@@ -15,8 +15,8 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 
 // Auth + Theme Context
-import { useAuthContext } from "@/context/AuthContext";
-import { useTheme } from "@/context/ThemeContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { useTheme } from "@/contexts/ThemeContext";
 
 // Layout
 import AppLayout from "@/layouts/AppLayout";
@@ -85,7 +85,7 @@ const ThemeToggle = () => {
 // -------------------------------
 const Login = () => {
   const navigate = useNavigate();
-  const { setUser } = useAuthContext();
+  const { setUser } = useAuth();
   const { theme } = useTheme();
 
   const [showPassword, setShowPassword] = useState(false);
@@ -178,18 +178,21 @@ const Login = () => {
             <form className="space-y-4" onSubmit={handleLogin}>
               <div>
                 <Label>Email</Label>
+                <div className="relative rounded">
                 <Input
                   type="email"
                   placeholder="Enter your email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  className="pr-10"
                 />
+                </div>
               </div>
 
               <div>
                 <Label>Password</Label>
-                <div className="relative">
+                <div className="relative rounded">
                   <Input
                     type={showPassword ? "text" : "password"}
                     placeholder="Enter your password"

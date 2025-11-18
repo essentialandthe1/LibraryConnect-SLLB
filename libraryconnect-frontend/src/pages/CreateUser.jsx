@@ -1,53 +1,77 @@
-// src/pages/CreateUser.jsx
-// ============================================================
-// 📌 CREATE USER PAGE
-// ------------------------------------------------------------
-// Handles creating a new user account (admin-only action).
-// Integrates Axios + TanStack Query for clean async logic.
-// Includes comments for backend integration.
-// ============================================================
+'use client';
 
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useMutation } from "@tanstack/react-query";
-import { api } from "../services/api"; // ✅ Reusable Axios instance
-import toast from "react-hot-toast";
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useMutation } from '@tanstack/react-query';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { toast } from '@/hooks/use-toast';
+import { api } from '@/services/api';
+import { ArrowLeft } from 'lucide-react';
+import * as Select from '@radix-ui/react-select';
+import clsx from 'clsx';
 
 const CreateUser = () => {
   const navigate = useNavigate();
 
-  // 🔹 Local state for form inputs
   const [form, setForm] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    role: "",
-    branch: "",
-    password: "",
-    confirmPassword: "",
-    status: "active",
+    name: '',
+    email: '',
+    phone: '',
+    role: '',
+    branch: '',
+    password: '',
+    confirmPassword: '',
+    status: 'active',
   });
 
-  // 🔹 Handle input field updates
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+  const [errors, setErrors] = useState({});
+
+  const roles = [
+    'Admin/HR',
+    'Chief Librarian',
+    'Deputy Chief Librarian',
+    'Principal Librarian',
+    'Branch Librarian',
+    'Staff',
+  ];
+
+  const branches = [
+    'HQ - Cataloguing Department',
+    'HQ - Reference Department',
+    'HQ - Adult Lending Department',
+    'HQ - Children Department',
+    'Regional Library South (Bo)',
+    'Regional Library East (Kenema)',
+    'Regional Library North (Makeni)',
+    'City Library Bo',
+    'City Library Kenema',
+    'City Library Makeni',
+    'Kailahun District Library',
+    'Koidu District Library',
+    'Segbuma Branch Library',
+  ];
+
+  const validate = () => {
+    const newErrors = {};
+
+    if (!form.name.trim()) newErrors.name = 'Name is required';
+    if (!form.email.trim()) newErrors.email = 'Email is required';
+    if (!form.phone.trim()) newErrors.phone = 'Phone is required';
+    if (!form.role.trim()) newErrors.role = 'Role is required';
+    if (!form.branch.trim()) newErrors.branch = 'Branch is required';
+    if (!form.password) newErrors.password = 'Password is required';
+    if (form.password !== form.confirmPassword)
+      newErrors.confirmPassword = 'Passwords do not match';
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
-  // ============================================================
-  // 🚀 TanStack Mutation for user creation
-  // ============================================================
   const { mutate: createUser, isPending } = useMutation({
     mutationFn: async () => {
-      // 🧩 FRONTEND VALIDATION
-      if (form.password !== form.confirmPassword) {
-        throw new Error("Passwords do not match!");
-      }
-
-      // 🧩 BACKEND ENDPOINT (replace URL when backend ready)
       const payload = {
         username: form.name,
         email: form.email,
@@ -55,252 +79,176 @@ const CreateUser = () => {
         role: form.role,
         branch: form.branch,
         password: form.password,
-        status: form.status,
+        status: form.status || 'active',
       };
 
-      // Backend should accept POST /users/admin-create
-      const res = await api.post("/users/admin-create", payload);
-      return res.data;
+      return await api.post('/users/admin-create', payload);
     },
-    onSuccess: (data) => {
-      toast.success(`✅ User "${form.name}" created successfully!`);
-      navigate("/manage-users");
+    onSuccess: () => {
+      toast({
+        title: 'Success',
+        description: `User "${form.name}" created successfully!`,
+      });
+      navigate('/manage-users');
     },
-    onError: (err) => {
-      toast.error(`❌ ${err.message || "Failed to create user"}`);
-      console.error("Error creating user:", err);
+    onError: (error) => {
+      toast({
+        title: 'Error',
+        description: error?.message || 'Failed to create user',
+        variant: 'destructive',
+      });
     },
   });
 
-  // 🔹 Handle Form Submit
   const handleSubmit = (e) => {
     e.preventDefault();
-    createUser(); // ⛓️ Trigger API request via mutation
+    if (validate()) createUser();
   };
 
-  // 🔹 Reset Form
   const handleClear = () => {
     setForm({
-      name: "",
-      email: "",
-      phone: "",
-      role: "",
-      branch: "",
-      password: "",
-      confirmPassword: "",
-      status: "active",
+      name: '',
+      email: '',
+      phone: '',
+      role: '',
+      branch: '',
+      password: '',
+      confirmPassword: '',
+      status: 'active',
     });
+    setErrors({});
   };
 
-  // ============================================================
-  // 🧭 UI Rendering
-  // ============================================================
+  const renderSelect = (label, value, onChange, options, error) => (
+    <div className="space-y-2">
+      <Label>{label}</Label>
+
+      <Select.Root value={value} onValueChange={onChange}>
+        <Select.Trigger
+          className={clsx(
+            'w-full px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white text-left',
+            error ? 'border-red-500' : 'border-gray-300'
+          )}
+        >
+          <Select.Value placeholder={`Select ${label.toLowerCase()}`} />
+        </Select.Trigger>
+
+        <Select.Content className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-60 overflow-auto z-50 mt-1">
+          {options.map((opt) => (
+            <Select.Item
+              key={opt}
+              value={opt}
+              className="px-3 py-2 cursor-pointer select-none text-gray-800 dark:text-white data-[highlighted]:bg-blue-500 data-[highlighted]:text-white"
+            >
+              <Select.ItemText>{opt}</Select.ItemText>
+            </Select.Item>
+          ))}
+        </Select.Content>
+      </Select.Root>
+
+      {error && <p className="text-red-500 text-sm">{error}</p>}
+    </div>
+  );
+
   return (
-    <div className="max-w-2xl mx-auto bg-white dark:bg-gray-800 p-6 rounded-md shadow">
-      <h2 className="text-xl font-bold mb-6 text-gray-800 dark:text-white">
-        Create New User
-      </h2>
+    <div className="p-8 max-w-4xl mx-auto animate-in">
+      <Button variant="ghost" onClick={() => navigate(-1)} className="mb-4">
+        <ArrowLeft className="mr-2 h-4 w-4" /> Back
+      </Button>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Full Name */}
-        <InputField
-          label="Full Name"
-          name="name"
-          value={form.name}
-          onChange={handleChange}
-          placeholder="Enter full name"
-          required
-        />
+      <Card className="hover-lift">
+        <CardHeader>
+          <CardTitle>Create New User</CardTitle>
+          <CardDescription>Add a new user to the system</CardDescription>
+        </CardHeader>
 
-        {/* Email */}
-        <InputField
-          label="Email Address"
-          name="email"
-          type="email"
-          value={form.email}
-          onChange={handleChange}
-          placeholder="Enter email"
-          required
-        />
-
-        {/* Phone */}
-        <InputField
-          label="Phone Number"
-          name="phone"
-          type="tel"
-          value={form.phone}
-          onChange={handleChange}
-          placeholder="Enter phone number"
-          required
-        />
-
-        {/* Role */}
-        <SelectField
-          label="User Role / Position"
-          name="role"
-          value={form.role}
-          onChange={handleChange}
-          options={[
-            "Admin/HR",
-            "Chief Librarian",
-            "Deputy Chief Librarian",
-            "Principal Librarian",
-            "Branch Librarian",
-            "Staff",
-          ]}
-          required
-        />
-
-        {/* Branch */}
-        <SelectField
-          label="Branch / Department"
-          name="branch"
-          value={form.branch}
-          onChange={handleChange}
-          options={[
-            "HQ - Cataloguing Department",
-            "HQ - Reference Department",
-            "HQ - Adult Lending Department",
-            "HQ - Children Department",
-            "Regional Library South (Bo)",
-            "Regional Library East (Kenema)",
-            "Regional Library North (Makeni)",
-            "City Library Bo",
-            "City Library Kenema",
-            "City Library Makeni",
-            "Kailahun District Library",
-            "Koidu District Library",
-            "Segbuma Branch Library",
-          ]}
-          required
-        />
-
-        {/* Password */}
-        <InputField
-          label="Password"
-          name="password"
-          type="password"
-          value={form.password}
-          onChange={handleChange}
-          placeholder="Enter password"
-          required
-        />
-
-        {/* Confirm Password */}
-        <InputField
-          label="Confirm Password"
-          name="confirmPassword"
-          type="password"
-          value={form.confirmPassword}
-          onChange={handleChange}
-          placeholder="Re-enter password"
-          required
-        />
-
-        {/* Account Status */}
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
-            Account Status
-          </label>
-          <div className="flex gap-4 items-center">
-            {["active", "inactive"].map((status) => (
-              <label
-                key={status}
-                className="flex items-center gap-1 text-sm text-gray-700 dark:text-gray-300"
-              >
-                <input
-                  type="radio"
-                  name="status"
-                  value={status}
-                  checked={form.status === status}
-                  onChange={handleChange}
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid gap-6 md:grid-cols-2">
+              {/* Full Name */}
+              <div className="space-y-2">
+                <Label>Full Name *</Label>
+                <Input
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  placeholder="John Kamara"
+                  className={clsx(errors.name && 'border-red-500')}
                 />
-                {status.charAt(0).toUpperCase() + status.slice(1)}
-              </label>
-            ))}
-          </div>
-        </div>
+                {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
+              </div>
 
-        {/* Buttons */}
-        <div className="flex gap-4 mt-6">
-          <button
-            type="submit"
-            disabled={isPending}
-            className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 disabled:opacity-60"
-          >
-            {isPending ? "Creating..." : "Create User"}
-          </button>
-          <button
-            type="button"
-            onClick={handleClear}
-            className="w-full bg-gray-300 text-gray-800 py-2 rounded-md hover:bg-gray-400 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
-          >
-            Clear Form
-          </button>
-        </div>
-      </form>
+              {/* Email */}
+              <div className="space-y-2">
+                <Label>Email *</Label>
+                <Input
+                  type="email"
+                  value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  placeholder="john@sllb.gov.sl"
+                  className={clsx(errors.email && 'border-red-500')}
+                />
+                {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
+              </div>
+
+              {/* Phone */}
+              <div className="space-y-2">
+                <Label>Phone Number *</Label>
+                <Input
+                  value={form.phone}
+                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                  placeholder="+232 XX XXX XXXX"
+                  className={clsx(errors.phone && 'border-red-500')}
+                />
+                {errors.phone && <p className="text-red-500 text-sm">{errors.phone}</p>}
+              </div>
+
+              {/* Selects */}
+              {renderSelect('Role', form.role, (val) => setForm({ ...form, role: val }), roles, errors.role)}
+              {renderSelect('Branch/Department', form.branch, (val) => setForm({ ...form, branch: val }), branches, errors.branch)}
+              {renderSelect('Status', form.status, (val) => setForm({ ...form, status: val }), ['active', 'inactive'])}
+
+              {/* Password */}
+              <div className="space-y-2">
+                <Label>Password *</Label>
+                <Input
+                  type="password"
+                  value={form.password}
+                  onChange={(e) => setForm({ ...form, password: e.target.value })}
+                  className={clsx(errors.password && 'border-red-500')}
+                />
+                {errors.password && <p className="text-red-500 text-sm">{errors.password}</p>}
+              </div>
+
+              {/* Confirm Password */}
+              <div className="space-y-2">
+                <Label>Confirm Password *</Label>
+                <Input
+                  type="password"
+                  value={form.confirmPassword}
+                  onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
+                  className={clsx(errors.confirmPassword && 'border-red-500')}
+                />
+                {errors.confirmPassword && (
+                  <p className="text-red-500 text-sm">{errors.confirmPassword}</p>
+                )}
+              </div>
+            </div>
+
+            {/* Buttons */}
+            <div className="flex gap-4">
+              <Button type="submit" disabled={isPending} className= "rounded bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2 justify-center">
+                {isPending ? 'Creating...' : 'Create User'}
+              </Button>
+
+              <Button type="button" variant="outline" onClick={handleClear} className= "rounded flex items-center gap-2 justify-center">
+                Clear Form
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 };
 
 export default CreateUser;
-
-// ============================================================
-// 🧩 Reusable Components
-// ============================================================
-
-// ✅ Text Input
-const InputField = ({
-  label,
-  name,
-  type = "text",
-  value,
-  onChange,
-  placeholder,
-  required = false,
-}) => (
-  <div>
-    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
-      {label}
-    </label>
-    <input
-      type={type}
-      name={name}
-      value={value}
-      onChange={onChange}
-      required={required}
-      placeholder={placeholder}
-      className="w-full mt-1 px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-    />
-  </div>
-);
-
-// ✅ Select Input
-const SelectField = ({
-  label,
-  name,
-  value,
-  onChange,
-  options,
-  required = false,
-}) => (
-  <div>
-    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
-      {label}
-    </label>
-    <select
-      name={name}
-      value={value}
-      onChange={onChange}
-      required={required}
-      className="w-full mt-1 px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-    >
-      <option value="">Select an option</option>
-      {options.map((opt, idx) => (
-        <option key={idx} value={opt}>
-          {opt}
-        </option>
-      ))}
-    </select>
-  </div>
-);
