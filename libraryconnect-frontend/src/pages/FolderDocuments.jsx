@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/Input';
+import { Badge } from '@/components/ui/Badge';
 import { ArrowLeft, Search, FileText, Download, Eye } from 'lucide-react';
 
 const FolderDocuments = () => {

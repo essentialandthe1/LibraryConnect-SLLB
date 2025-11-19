@@ -11,8 +11,8 @@ import bg2 from "../assets/login-bg2.jpg";
 // shadcn-ui components
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/Label";
+import { Input } from "@/components/ui/Input";
 
 // Auth + Theme Context
 import { useAuth } from "@/contexts/AuthContext";
