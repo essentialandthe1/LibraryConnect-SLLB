@@ -21,7 +21,7 @@ const AdminDashboard = () => {
   const [userSearch, setUserSearch] = useState("");
   const [logSearch, setLogSearch] = useState("");
   const [userPage, setUserPage] = useState(1);
-  const [userPageSize, setUserPageSize] = useState(5);
+  const [userPageSize, setUserPageSize] = useState(5); 
 
   // Fetch API data
   const { data: users = [], isLoading: usersLoading } = useQuery({
