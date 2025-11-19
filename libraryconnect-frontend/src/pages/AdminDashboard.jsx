@@ -8,7 +8,7 @@ import { api } from "../services/api";
 
 // Reusable components
 import { Table } from "../components/ui/Table.jsx";
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "../components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "../components/ui/Card";
 import { Button } from "../components/ui/button";
 
 // Hover-lift styles (can also go in a global CSS or Tailwind config)

@@ -10,7 +10,7 @@ import bg2 from "../assets/login-bg2.jpg";
 
 // shadcn-ui components
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Card } from "@/components/ui/Card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 
