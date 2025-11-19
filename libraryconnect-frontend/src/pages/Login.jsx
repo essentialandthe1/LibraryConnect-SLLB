@@ -9,7 +9,7 @@ import bg1 from "../assets/login-bg1.jpg";
 import bg2 from "../assets/login-bg2.jpg";
 
 // shadcn-ui components
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";

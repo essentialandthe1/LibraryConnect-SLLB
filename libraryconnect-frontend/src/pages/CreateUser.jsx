@@ -6,7 +6,7 @@ import { useMutation } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/Button';
 import { toast } from '@/hooks/use-toast';
 import { api } from '@/services/api';
 import { ArrowLeft } from 'lucide-react';

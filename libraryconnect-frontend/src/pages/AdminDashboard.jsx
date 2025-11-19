@@ -9,7 +9,7 @@ import { api } from "../services/api";
 // Reusable components
 import { Table } from "../components/ui/Table.jsx";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "../components/ui/Card";
-import { Button } from "../components/ui/button";
+import { Button } from "../components/ui/Button";
 
 // Hover-lift styles (can also go in a global CSS or Tailwind config)
 const hoverLiftClass = "transition-transform transform hover:-translate-y-1 hover:shadow-lg";
