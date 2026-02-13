@@ -1,33 +1,68 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
 import { Button } from '@/components/ui/Button';
 import { toast } from '@/hooks/use-toast';
 import { api } from '@/services/api';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ChevronDown } from 'lucide-react';
 import * as Select from '@radix-ui/react-select';
 import clsx from 'clsx';
 
-const CreateUser = () => {
-  const navigate = useNavigate();
+import { useForm, Controller, useWatch } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
 
-  const [form, setForm] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    role: '',
-    branch: '',
-    password: '',
-    confirmPassword: '',
-    status: 'active',
+/* ------------------ ZOD SCHEMA ------------------ */
+
+const userSchema = z
+  .object({
+    name: z.string().min(2, 'Full name is required'),
+    email: z.string().email('Invalid email address'),
+    phone: z.string().min(7, 'Phone is required'),
+    role: z.string().min(1, 'Role is required'),
+    branch: z.string().optional(),
+    status: z.enum(['active', 'inactive']),
+    password: z
+      .string()
+      .min(8, 'Minimum 8 characters')
+      .regex(/[A-Z]/, 'Must contain uppercase letter')
+      .regex(/[0-9]/, 'Must contain a number'),
+    confirmPassword: z.string(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.password !== data.confirmPassword) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Passwords do not match',
+        path: ['confirmPassword'],
+      });
+    }
+
+    if (data.role !== 'Admin/HR' && !data.branch) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Branch is required for this role',
+        path: ['branch'],
+      });
+    }
   });
 
-  const [errors, setErrors] = useState({});
+
+/* ------------------ COMPONENT ------------------ */
+
+const CreateUser = () => {
+  const navigate = useNavigate();
 
   const roles = [
     'Admin/HR',
@@ -54,40 +89,65 @@ const CreateUser = () => {
     'Segbuma Branch Library',
   ];
 
-  const validate = () => {
-    const newErrors = {};
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(userSchema),
+    defaultValues: {
+      name: '',
+      email: '',
+      phone: '',
+      role: '',
+      branch: '',
+      status: 'active',
+      password: '',
+      confirmPassword: '',
+    },
+  });
 
-    if (!form.name.trim()) newErrors.name = 'Name is required';
-    if (!form.email.trim()) newErrors.email = 'Email is required';
-    if (!form.phone.trim()) newErrors.phone = 'Phone is required';
-    if (!form.role.trim()) newErrors.role = 'Role is required';
-    if (!form.branch.trim()) newErrors.branch = 'Branch is required';
-    if (!form.password) newErrors.password = 'Password is required';
-    if (form.password !== form.confirmPassword)
-      newErrors.confirmPassword = 'Passwords do not match';
+  /* ------------------ PASSWORD STRENGTH ------------------ */
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+  const password = useWatch({ control, name: 'password' });
+
+  const getStrength = (pwd = '') => {
+    let score = 0;
+    if (pwd.length >= 8) score++;
+    if (/[A-Z]/.test(pwd)) score++;
+    if (/[0-9]/.test(pwd)) score++;
+    if (/[^A-Za-z0-9]/.test(pwd)) score++;
+    return score;
   };
 
-  const { mutate: createUser, isPending } = useMutation({
-    mutationFn: async () => {
-      const payload = {
-        username: form.name,
-        email: form.email,
-        phone: form.phone,
-        role: form.role,
-        branch: form.branch,
-        password: form.password,
-        status: form.status || 'active',
-      };
+  const strength = getStrength(password);
+  const strengthLabels = [
+    'Very Weak',
+    'Weak',
+    'Moderate',
+    'Strong',
+    'Very Strong',
+  ];
 
-      return await api.post('/users/admin-create', payload);
+  /* ------------------ MUTATION ------------------ */
+
+  const { mutate: createUser, isPending } = useMutation({
+    mutationFn: async (data) => {
+      return api.post('/users/admin-create', {
+        username: data.name,
+        email: data.email,
+        phone: data.phone,
+        role: data.role,
+        branch: data.branch,
+        password: data.password,
+        status: data.status,
+      });
     },
     onSuccess: () => {
       toast({
-        title: 'Success',
-        description: `User "${form.name}" created successfully!`,
+        title: 'User Created',
+        description: 'User successfully added.',
       });
       navigate('/manage-users');
     },
@@ -100,153 +160,260 @@ const CreateUser = () => {
     },
   });
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (validate()) createUser();
+  const selectedRole = useWatch({ control, name: 'role' });
+
+  const onSubmit = (data) => {
+    createUser(data);
   };
 
-  const handleClear = () => {
-    setForm({
-      name: '',
-      email: '',
-      phone: '',
-      role: '',
-      branch: '',
-      password: '',
-      confirmPassword: '',
-      status: 'active',
-    });
-    setErrors({});
-  };
-
-  const renderSelect = (label, value, onChange, options, error) => (
-    <div className="space-y-2">
-      <Label>{label}</Label>
-
-      <Select.Root value={value} onValueChange={onChange}>
-        <Select.Trigger
-          className={clsx(
-            'w-full px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white text-left',
-            error ? 'border-red-500' : 'border-gray-300'
-          )}
-        >
-          <Select.Value placeholder={`Select ${label.toLowerCase()}`} />
-        </Select.Trigger>
-
-        <Select.Content className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-60 overflow-auto z-50 mt-1">
-          {options.map((opt) => (
-            <Select.Item
-              key={opt}
-              value={opt}
-              className="px-3 py-2 cursor-pointer select-none text-gray-800 dark:text-white data-[highlighted]:bg-blue-500 data-[highlighted]:text-white"
-            >
-              <Select.ItemText>{opt}</Select.ItemText>
-            </Select.Item>
-          ))}
-        </Select.Content>
-      </Select.Root>
-
-      {error && <p className="text-red-500 text-sm">{error}</p>}
-    </div>
-  );
+  /* ------------------ JSX ------------------ */
 
   return (
-    <div className="p-8 max-w-4xl mx-auto animate-in">
-      <Button variant="ghost" onClick={() => navigate(-1)} className="mb-4">
-        <ArrowLeft className="mr-2 h-4 w-4" /> Back
-      </Button>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-6 px-4">
+      <div className="max-w-4xl mx-auto">
+        <Button variant="ghost" onClick={() => navigate(-1)} className="mb-6">
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back
+        </Button>
 
-      <Card className="hover-lift">
-        <CardHeader>
-          <CardTitle>Create New User</CardTitle>
-          <CardDescription>Add a new user to the system</CardDescription>
-        </CardHeader>
+        <Card className="rounded-2xl shadow-md">
+          <CardHeader>
+            <CardTitle>Create New User</CardTitle>
+            <CardDescription>
+              Add a new system user with role-based access.
+            </CardDescription>
+          </CardHeader>
 
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid gap-6 md:grid-cols-2">
-              {/* Full Name */}
-              <div className="space-y-2">
-                <Label>Full Name *</Label>
-                <Input
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  placeholder="John Kamara"
-                  className={clsx(errors.name && 'border-red-500')}
+          <CardContent className="p-4 md:p-8">
+            <form
+              onSubmit={handleSubmit(onSubmit)}
+              className="space-y-8"
+            >
+              <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
+                {/* NAME */}
+                <Controller
+                  name="name"
+                  control={control}
+                  render={({ field }) => (
+                    <div className="space-y-2">
+                      <Label>Full Name *</Label>
+                      <Input {...field} />
+                      {errors.name && (
+                        <p className="text-sm text-red-500">
+                          {errors.name.message}
+                        </p>
+                      )}
+                    </div>
+                  )}
                 />
-                {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
-              </div>
 
-              {/* Email */}
-              <div className="space-y-2">
-                <Label>Email *</Label>
-                <Input
-                  type="email"
-                  value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  placeholder="john@sllb.gov.sl"
-                  className={clsx(errors.email && 'border-red-500')}
+                {/* EMAIL */}
+                <Controller
+                  name="email"
+                  control={control}
+                  render={({ field }) => (
+                    <div className="space-y-2">
+                      <Label>Email *</Label>
+                      <Input type="email" {...field} />
+                      {errors.email && (
+                        <p className="text-sm text-red-500">
+                          {errors.email.message}
+                        </p>
+                      )}
+                    </div>
+                  )}
                 />
-                {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
-              </div>
 
-              {/* Phone */}
-              <div className="space-y-2">
-                <Label>Phone Number *</Label>
-                <Input
-                  value={form.phone}
-                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                  placeholder="+232 XX XXX XXXX"
-                  className={clsx(errors.phone && 'border-red-500')}
+                {/* PHONE */}
+                <Controller
+                  name="phone"
+                  control={control}
+                  render={({ field }) => (
+                    <div className="space-y-2">
+                      <Label>Phone *</Label>
+                      <Input {...field} />
+                      {errors.phone && (
+                        <p className="text-sm text-red-500">
+                          {errors.phone.message}
+                        </p>
+                      )}
+                    </div>
+                  )}
                 />
-                {errors.phone && <p className="text-red-500 text-sm">{errors.phone}</p>}
-              </div>
 
-              {/* Selects */}
-              {renderSelect('Role', form.role, (val) => setForm({ ...form, role: val }), roles, errors.role)}
-              {renderSelect('Branch/Department', form.branch, (val) => setForm({ ...form, branch: val }), branches, errors.branch)}
-              {renderSelect('Status', form.status, (val) => setForm({ ...form, status: val }), ['active', 'inactive'])}
+                {/* ROLE */}
+                <Controller
+                  name="role"
+                  control={control}
+                  render={({ field }) => (
+                    <div className="space-y-2">
+                      <Label>Role *</Label>
+                      <Select.Root
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <Select.Trigger className="w-full flex items-center justify-between px-3 py-2 rounded-lg border bg-white dark:bg-gray-700">
+                          <Select.Value placeholder="Select Role" />
+                          <ChevronDown size={16} />
+                        </Select.Trigger>
 
-              {/* Password */}
-              <div className="space-y-2">
-                <Label>Password *</Label>
-                <Input
-                  type="password"
-                  value={form.password}
-                  onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  className={clsx(errors.password && 'border-red-500')}
+                        <Select.Portal>
+                          <Select.Content
+                            position="popper"
+                            sideOffset={6}
+                            className="z-[999] w-[var(--radix-select-trigger-width)] bg-white dark:bg-gray-800 border rounded-lg shadow-xl max-h-60 overflow-hidden"
+                          >
+                            <Select.Viewport className="p-1">
+                              {roles.map((role) => (
+                                <Select.Item
+                                  key={role}
+                                  value={role}
+                                  className="px-3 py-2 rounded-md text-sm cursor-pointer data-[highlighted]:bg-blue-600 data-[highlighted]:text-white"
+                                >
+                                  <Select.ItemText>
+                                    {role}
+                                  </Select.ItemText>
+                                </Select.Item>
+                              ))}
+                            </Select.Viewport>
+                          </Select.Content>
+                        </Select.Portal>
+                      </Select.Root>
+
+                      {errors.role && (
+                        <p className="text-sm text-red-500">
+                          {errors.role.message}
+                        </p>
+                      )}
+                    </div>
+                  )}
                 />
-                {errors.password && <p className="text-red-500 text-sm">{errors.password}</p>}
-              </div>
 
-              {/* Confirm Password */}
-              <div className="space-y-2">
-                <Label>Confirm Password *</Label>
-                <Input
-                  type="password"
-                  value={form.confirmPassword}
-                  onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
-                  className={clsx(errors.confirmPassword && 'border-red-500')}
-                />
-                {errors.confirmPassword && (
-                  <p className="text-red-500 text-sm">{errors.confirmPassword}</p>
+                {/* CONDITIONAL BRANCH */}
+                {selectedRole !== 'Admin/HR' && (
+                  <Controller
+                    name="branch"
+                    control={control}
+                    render={({ field }) => (
+                      <div className="space-y-2">
+                        <Label>Branch *</Label>
+                        <Select.Root
+                          value={field.value}
+                          onValueChange={field.onChange}
+                        >
+                          <Select.Trigger className="w-full flex items-center justify-between px-3 py-2 rounded-lg border bg-white dark:bg-gray-700">
+                            <Select.Value placeholder="Select Branch" />
+                            <ChevronDown size={16} />
+                          </Select.Trigger>
+
+                          <Select.Portal>
+                            <Select.Content
+                              position="popper"
+                              sideOffset={6}
+                              className="z-[999] w-[var(--radix-select-trigger-width)] bg-white dark:bg-gray-800 border rounded-lg shadow-xl max-h-60 overflow-hidden"
+                            >
+                              <Select.Viewport className="p-1">
+                                {branches.map((branch) => (
+                                  <Select.Item
+                                    key={branch}
+                                    value={branch}
+                                    className="px-3 py-2 rounded-md text-sm cursor-pointer data-[highlighted]:bg-blue-600 data-[highlighted]:text-white"
+                                  >
+                                    <Select.ItemText>
+                                      {branch}
+                                    </Select.ItemText>
+                                  </Select.Item>
+                                ))}
+                              </Select.Viewport>
+                            </Select.Content>
+                          </Select.Portal>
+                        </Select.Root>
+
+                        {errors.branch && (
+                          <p className="text-sm text-red-500">
+                            {errors.branch.message}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  />
                 )}
+
+                {/* PASSWORD */}
+                <Controller
+                  name="password"
+                  control={control}
+                  render={({ field }) => (
+                    <div className="space-y-2">
+                      <Label>Password *</Label>
+                      <Input type="password" {...field} />
+
+                      {/* Strength Meter */}
+                      {password && (
+                        <>
+                          <div className="h-2 w-full bg-gray-200 rounded">
+                            <div
+                              className="h-2 rounded transition-all bg-blue-600"
+                              style={{
+                                width: `${(strength / 4) * 100}%`,
+                              }}
+                            />
+                          </div>
+                          <p className="text-xs text-gray-500">
+                            {strengthLabels[strength]}
+                          </p>
+                        </>
+                      )}
+
+                      {errors.password && (
+                        <p className="text-sm text-red-500">
+                          {errors.password.message}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                />
+
+                {/* CONFIRM PASSWORD */}
+                <Controller
+                  name="confirmPassword"
+                  control={control}
+                  render={({ field }) => (
+                    <div className="space-y-2">
+                      <Label>Confirm Password *</Label>
+                      <Input type="password" {...field} />
+                      {errors.confirmPassword && (
+                        <p className="text-sm text-red-500">
+                          {errors.confirmPassword.message}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                />
               </div>
-            </div>
 
-            {/* Buttons */}
-            <div className="flex gap-4">
-              <Button type="submit" disabled={isPending} className= "rounded bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2 justify-center">
-                {isPending ? 'Creating...' : 'Create User'}
-              </Button>
+              <div className="flex flex-col md:flex-row gap-4 pt-4">
+                <Button
+                  type="submit"
+                  disabled={isPending}
+                  className="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  {isPending ? 'Creating...' : 'Create User'}
+                </Button>
 
-              <Button type="button" variant="outline" onClick={handleClear} className= "rounded flex items-center gap-2 justify-center">
-                Clear Form
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => reset()}
+                  className="w-full md:w-auto"
+                >
+                  Clear Form
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };

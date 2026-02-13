@@ -60,7 +60,7 @@ const Sidebar = ({ isOpen, toggleSidebar, collapsed, setCollapsed }) => {
           collapsed ? "w-20" : "w-64",
           isOpen ? "translate-x-0" : "-translate-x-full",
           "md:translate-x-0 md:z-30 shadow-md",
-          "bg-sidebar text-sidebar-foreground dark:bg-[#0D0D0D] dark:text-gray-100"
+          "bg-white text-gray-800 dark:bg-[#0D0D0D] dark:text-gray-100"
         )}
       >
         {/* Header */}
@@ -86,8 +86,8 @@ const Sidebar = ({ isOpen, toggleSidebar, collapsed, setCollapsed }) => {
             <div className="px-4 py-4 border-b border-border dark:border-white/20
 ">
               <div className="bg-card dark:bg-gray-800 p-3 rounded text-sm shadow-sm transition-shadow hover:shadow-md">
-                <p className="font-semibold truncate text-foreground dark:text-gray-100">{user.email}</p>
-                <p className="text-muted-foreground dark:text-gray-400 text-xs capitalize">{user.role}</p>
+                <p className="font-semibold truncate text-gray-800 dark:text-gray-100">{user.email}</p>
+                <p className="text-gray-500 dark:text-gray-400 text-xs capitalize">{user.role}</p>
               </div>
             </div>
           )}
@@ -100,8 +100,8 @@ const Sidebar = ({ isOpen, toggleSidebar, collapsed, setCollapsed }) => {
                 clsx(
                   "flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-200",
                   isActive
-                    ? "bg-blue-50 text-blue-600 shadow dark:bg-blue-700 dark:text-blue-200"
-                    : "hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-800 dark:hover:text-blue-200"
+                    ? "bg-blue-100 text-blue-700 dark:bg-blue-700 dark:text-blue-200 shadow"
+                    : "text-gray-700 dark:text-gray-300 hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-blue-800 dark:hover:text-blue-200"
                 )
               }
             >
@@ -154,8 +154,9 @@ const Sidebar = ({ isOpen, toggleSidebar, collapsed, setCollapsed }) => {
                   clsx(
                     "flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-200",
                     isActive
-                      ? "bg-blue-50 text-blue-600 shadow dark:bg-blue-700 dark:text-blue-200"
-                      : "hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-800 dark:hover:text-blue-200"
+                      ? "bg-blue-100 text-blue-700 dark:bg-blue-700 dark:text-blue-200 shadow"
+                      : "text-gray-700 dark:text-gray-300 hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-blue-800 dark:hover:text-blue-200"
+
                   )
                 }
               >
@@ -179,8 +180,8 @@ const Sidebar = ({ isOpen, toggleSidebar, collapsed, setCollapsed }) => {
                   clsx(
                     "flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-200",
                     isActive
-                      ? "bg-blue-50 text-blue-600 shadow dark:bg-blue-700 dark:text-blue-200"
-                      : "hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-800 dark:hover:text-blue-200"
+                      ? "bg-blue-100 text-blue-700 dark:bg-blue-700 dark:text-blue-200 shadow"
+                      : "text-gray-700 dark:text-gray-300 hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-blue-800 dark:hover:text-blue-200"
                   )
                 }
               >

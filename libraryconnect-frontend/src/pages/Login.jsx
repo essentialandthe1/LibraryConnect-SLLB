@@ -185,7 +185,7 @@ const Login = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="pr-10"
+                  className="pr-10 rounded"
                 />
                 </div>
               </div>
@@ -199,7 +199,7 @@ const Login = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    className="pr-10"
+                    className="pr-10 rounded"
                   />
                   <button
                     type="button"
