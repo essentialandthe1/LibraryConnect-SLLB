@@ -241,6 +241,57 @@ const CreateUser = () => {
                   )}
                 />
 
+                {/* STATUS */}
+                <Controller
+                  name="status"
+                  control={control}
+                  render={({ field }) => (
+                    <div className="space-y-2">
+                      <Label>Status *</Label>
+
+                      <Select.Root
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <Select.Trigger className="w-full flex items-center justify-between px-3 py-2 rounded-lg border bg-white dark:bg-gray-700">
+                          <Select.Value placeholder="Select Status" />
+                          <ChevronDown size={16} />
+                        </Select.Trigger>
+
+                        <Select.Portal>
+                          <Select.Content
+                            position="popper"
+                            sideOffset={6}
+                            className="z-[999] w-[var(--radix-select-trigger-width)] bg-white dark:bg-gray-800 border rounded-lg shadow-xl"
+                          >
+                            <Select.Viewport className="p-1">
+                              <Select.Item
+                                value="active"
+                                className="px-3 py-2 rounded-md text-sm cursor-pointer data-[highlighted]:bg-blue-600 data-[highlighted]:text-white"
+                              >
+                                <Select.ItemText>Active</Select.ItemText>
+                              </Select.Item>
+
+                              <Select.Item
+                                value="inactive"
+                                className="px-3 py-2 rounded-md text-sm cursor-pointer data-[highlighted]:bg-blue-600 data-[highlighted]:text-white"
+                              >
+                                <Select.ItemText>Inactive</Select.ItemText>
+                              </Select.Item>
+                            </Select.Viewport>
+                          </Select.Content>
+                        </Select.Portal>
+                      </Select.Root>
+
+                      {errors.status && (
+                        <p className="text-sm text-red-500">
+                          {errors.status.message}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                />
+
                 {/* ROLE */}
                 <Controller
                   name="role"
@@ -396,7 +447,7 @@ const CreateUser = () => {
                 <Button
                   type="submit"
                   disabled={isPending}
-                  className="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white"
+                  className="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white rounded"
                 >
                   {isPending ? 'Creating...' : 'Create User'}
                 </Button>
@@ -405,7 +456,7 @@ const CreateUser = () => {
                   type="button"
                   variant="outline"
                   onClick={() => reset()}
-                  className="w-full md:w-auto"
+                  className="w-full md:w-auto rounded"
                 >
                   Clear Form
                 </Button>
